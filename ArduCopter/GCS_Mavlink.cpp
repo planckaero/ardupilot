@@ -13,6 +13,16 @@ void Copter::gcs_send_heartbeat(void)
     gcs_send_message(MSG_HEARTBEAT);
 }
 
+void Copter::gcs_send_stateinfo(void)
+{
+    for (uint8_t i=0; i<num_gcs; i++) {
+        if (gcs[i].initialised) {
+            gcs[i].attitude_send();
+            gcs[i].position_send();
+        }
+    }
+}
+
 void Copter::gcs_send_deferred(void)
 {
     gcs_send_message(MSG_RETRY_DEFERRED);
@@ -844,6 +854,20 @@ AP_GROUPEND
 };
 
 void
+GCS_MAVLINK_Copter::attitude_send(void)
+{
+    if(comm_get_txspace(chan) > 200)
+        copter.send_attitude(chan);
+}
+
+void
+GCS_MAVLINK_Copter::position_send(void)
+{
+    if(comm_get_txspace(chan) > 200)
+        copter.send_location(chan);
+}
+
+void
 GCS_MAVLINK_Copter::data_stream_send(void)
 {
     if (waypoint_receiving) {
@@ -895,7 +919,7 @@ GCS_MAVLINK_Copter::data_stream_send(void)
     if (copter.gcs_out_of_time) return;
 
     if (stream_trigger(STREAM_POSITION)) {
-        send_message(MSG_LOCATION);
+        //send_message(MSG_LOCATION);
         send_message(MSG_LOCAL_POSITION);
     }
 
@@ -915,7 +939,7 @@ GCS_MAVLINK_Copter::data_stream_send(void)
     if (copter.gcs_out_of_time) return;
 
     if (stream_trigger(STREAM_EXTRA1)) {
-        send_message(MSG_ATTITUDE);
+        //send_message(MSG_ATTITUDE);
         send_message(MSG_SIMSTATE);
         send_message(MSG_PID_TUNING);
     }

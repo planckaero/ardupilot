@@ -96,6 +96,8 @@ public:
     void        send_message(enum ap_message id);
     void        send_text(MAV_SEVERITY severity, const char *str);
     virtual void        data_stream_send(void) = 0;
+    virtual void        attitude_send(void) = 0;
+    virtual void        position_send(void) = 0;
     void        queued_param_send();
     void        queued_waypoint_send();
     void        set_snoop(void (*_msg_snoop)(const mavlink_message_t* msg)) {

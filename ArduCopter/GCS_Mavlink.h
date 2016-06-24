@@ -8,6 +8,8 @@ class GCS_MAVLINK_Copter : public GCS_MAVLINK
 public:
 
     void data_stream_send(void) override;
+    void attitude_send(void) override;
+    void position_send(void) override;
 
 protected:
 
