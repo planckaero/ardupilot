@@ -98,6 +98,7 @@ public:
     virtual void        data_stream_send(void) = 0;
     virtual void        attitude_send(void) = 0;
     virtual void        position_send(void) = 0;
+    virtual void        raw_imu_send(void) = 0;
     void        queued_param_send();
     void        queued_waypoint_send();
     void        set_snoop(void (*_msg_snoop)(const mavlink_message_t* msg)) {
@@ -158,7 +159,7 @@ public:
     bool send_gps_raw(AP_GPS &gps);
     void send_system_time(AP_GPS &gps);
     void send_radio_in(uint8_t receiver_rssi);
-    void send_raw_imu(const AP_InertialSensor &ins, const Compass &compass);
+    void send_raw_imu(const AP_InertialSensor &ins, const Compass &compass, AP_AHRS &ahrs);
     void send_scaled_pressure(AP_Baro &barometer);
     void send_sensor_offsets(const AP_InertialSensor &ins, const Compass &compass, AP_Baro &barometer);
     void send_ahrs(AP_AHRS &ahrs);

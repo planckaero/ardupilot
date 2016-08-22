@@ -19,6 +19,7 @@ void Copter::gcs_send_stateinfo(void)
         if (gcs[i].initialised) {
             gcs[i].attitude_send();
             gcs[i].position_send();
+            gcs[i].raw_imu_send();
         }
     }
 }
@@ -603,7 +604,7 @@ bool GCS_MAVLINK_Copter::try_send_message(enum ap_message id)
 
     case MSG_RAW_IMU1:
         CHECK_PAYLOAD_SIZE(RAW_IMU);
-        send_raw_imu(copter.ins, copter.compass);
+        send_raw_imu(copter.ins, copter.compass, copter.ahrs);
         break;
 
     case MSG_RAW_IMU2:
@@ -868,6 +869,13 @@ GCS_MAVLINK_Copter::position_send(void)
 }
 
 void
+GCS_MAVLINK_Copter::raw_imu_send(void)
+{
+    if(comm_get_txspace(chan) > 200)
+        send_raw_imu(copter.ins, copter.compass, copter.ahrs);
+}
+
+void
 GCS_MAVLINK_Copter::data_stream_send(void)
 {
     if (waypoint_receiving) {
@@ -900,7 +908,7 @@ GCS_MAVLINK_Copter::data_stream_send(void)
     }
 
     if (stream_trigger(STREAM_RAW_SENSORS)) {
-        send_message(MSG_RAW_IMU1);
+        //send_message(MSG_RAW_IMU1);
         send_message(MSG_RAW_IMU2);
         send_message(MSG_RAW_IMU3);
     }

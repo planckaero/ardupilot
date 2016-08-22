@@ -1137,85 +1137,33 @@ void GCS_MAVLINK::send_radio_in(uint8_t receiver_rssi)
     }
 }
 
-void GCS_MAVLINK::send_raw_imu(const AP_InertialSensor &ins, const Compass &compass)
+void GCS_MAVLINK::send_raw_imu(const AP_InertialSensor &ins, const Compass &compass, AP_AHRS &ahrs)
 {
-    const Vector3f &accel = ins.get_accel(0);
-    const Vector3f &gyro = ins.get_gyro(0);
-    Vector3f mag;
-    if (compass.get_count() >= 1) {
-        mag = compass.get_field(0);
-    } else {
-        mag.zero();
-    }
+    AP_AHRS_NavEKF &_ahrs = reinterpret_cast<AP_AHRS_NavEKF&>(ahrs);
+    if(_ahrs.get_NavEKF2().activeCores() > 0) {
+        Vector3f accel;
+        const Vector3f &gyro = ins.get_gyro(0);
+        _ahrs.get_NavEKF2().getAccelNED(accel);
+        Vector3f mag;
+        if (compass.get_count() >= 1) {
+            mag = compass.get_field(0);
+        } else {
+            mag.zero();
+        }
 
-    mavlink_msg_raw_imu_send(
-        chan,
-        AP_HAL::micros(),
-        accel.x * 1000.0f / GRAVITY_MSS,
-        accel.y * 1000.0f / GRAVITY_MSS,
-        accel.z * 1000.0f / GRAVITY_MSS,
-        gyro.x * 1000.0f,
-        gyro.y * 1000.0f,
-        gyro.z * 1000.0f,
-        mag.x,
-        mag.y,
-        mag.z);
-
-    if (ins.get_gyro_count() <= 1 &&
-        ins.get_accel_count() <= 1 &&
-        compass.get_count() <= 1) {
-        return;
+        mavlink_msg_raw_imu_send(
+            chan,
+            AP_HAL::micros(),
+            accel.x * 1000.0f,
+            accel.y * 1000.0f,
+            accel.z * 1000.0f,
+            gyro.x * 1000.0f,
+            gyro.y * 1000.0f,
+            gyro.z * 1000.0f,
+            mag.x,
+            mag.y,
+            mag.z);
     }
-    if (!HAVE_PAYLOAD_SPACE(chan, SCALED_IMU2)) {
-        return;
-    }
-    const Vector3f &accel2 = ins.get_accel(1);
-    const Vector3f &gyro2 = ins.get_gyro(1);
-    if (compass.get_count() >= 2) {
-        mag = compass.get_field(1);
-    } else {
-        mag.zero();
-    }
-    mavlink_msg_scaled_imu2_send(
-        chan,
-        AP_HAL::millis(),
-        accel2.x * 1000.0f / GRAVITY_MSS,
-        accel2.y * 1000.0f / GRAVITY_MSS,
-        accel2.z * 1000.0f / GRAVITY_MSS,
-        gyro2.x * 1000.0f,
-        gyro2.y * 1000.0f,
-        gyro2.z * 1000.0f,
-        mag.x,
-        mag.y,
-        mag.z);        
-
-    if (ins.get_gyro_count() <= 2 &&
-        ins.get_accel_count() <= 2 &&
-        compass.get_count() <= 2) {
-        return;
-    }
-    if (!HAVE_PAYLOAD_SPACE(chan, SCALED_IMU3)) {
-        return;
-    }
-    const Vector3f &accel3 = ins.get_accel(2);
-    const Vector3f &gyro3 = ins.get_gyro(2);
-    if (compass.get_count() >= 3) {
-        mag = compass.get_field(2);
-    } else {
-        mag.zero();
-    }
-    mavlink_msg_scaled_imu3_send(
-        chan,
-        AP_HAL::millis(),
-        accel3.x * 1000.0f / GRAVITY_MSS,
-        accel3.y * 1000.0f / GRAVITY_MSS,
-        accel3.z * 1000.0f / GRAVITY_MSS,
-        gyro3.x * 1000.0f,
-        gyro3.y * 1000.0f,
-        gyro3.z * 1000.0f,
-        mag.x,
-        mag.y,
-        mag.z);        
 }
 
 void GCS_MAVLINK::send_scaled_pressure(AP_Baro &barometer)
