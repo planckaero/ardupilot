@@ -157,6 +157,7 @@ void NavEKF2_core::InitialiseVariables()
     dtEkfAvg = EKF_TARGET_DT;
     dt = 0;
     velDotNEDfilt.zero();
+    velDotNEDCurrentfilt.zero();
     lastKnownPositionNE.zero();
     prevTnb.zero();
     memset(&P[0][0], 0, sizeof(P));
@@ -278,6 +279,7 @@ void NavEKF2_core::InitialiseVariables()
     storedTAS.reset();
     storedRange.reset();
     storedOutput.reset();
+
 }
 
 // Initialise the states from accelerometer and magnetometer data (if present)
@@ -600,7 +602,13 @@ void NavEKF2_core::calcOutputStates()
     Vector3f delVelNav  = Tbn_temp*delVelNewCorrected;
     delVelNav.z += GRAVITY_MSS*imuDataNew.delVelDT;
 
+    // calculate the rate of change of velocity (used as corrected raw acel)
     velDotNEDCurrent = delVelNav/imuDataNew.delVelDT;
+
+    // apply a first order lowpass filter: dt = 2.5ms fc = 0.83Hz alpha = dt / (dt + 1/(2*pi*fc))
+    velDotNEDCurrentfilt = velDotNEDCurrent * 0.0130f + velDotNEDCurrentfilt * 0.9870f;
+    
+    //hal.console->printf("%lu \n", (unsigned long) AP_HAL::millis());
 
     // save velocity for use in trapezoidal integration for position calcuation
     Vector3f lastVelocity = outputDataNew.velocity;
