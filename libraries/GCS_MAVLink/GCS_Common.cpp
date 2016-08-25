@@ -1143,7 +1143,7 @@ void GCS_MAVLINK::send_raw_imu(const AP_InertialSensor &ins, const Compass &comp
     if(_ahrs.get_NavEKF2().activeCores() > 0) {
         Vector3f accel;
         const Vector3f &gyro = ins.get_gyro(0);
-        _ahrs.get_NavEKF2().getAccelNED(accel);
+        _ahrs.get_NavEKF2().getAccelNEDCurrent(accel);
         Vector3f mag;
         if (compass.get_count() >= 1) {
             mag = compass.get_field(0);

@@ -92,6 +92,9 @@ public:
     // This returns the specific forces in the NED frame
     void getAccelNED(Vector3f &accelNED) const;
 
+    // This returns the specific forces in the NED frame at Current Time
+    void getAccelNEDCurrent(Vector3f &accelNEDCurrent) const;
+
     // return body axis gyro bias estimates in rad/sec
     void getGyroBias(Vector3f &gyroBias) const;
 
@@ -714,6 +717,7 @@ private:
     uint32_t prevBetaStep_ms;       // time stamp of last synthetic sideslip fusion step
     uint32_t lastMagUpdate_us;      // last time compass was updated in usec
     Vector3f velDotNED;             // rate of change of velocity in NED frame
+    Vector3f velDotNEDCurrent;      // rate of change of velocity in NED frame at Current Time
     Vector3f velDotNEDfilt;         // low pass filtered velDotNED
     uint32_t imuSampleTime_ms;      // time that the last IMU value was taken
     bool tasDataToFuse;             // true when new airspeed data is waiting to be fused

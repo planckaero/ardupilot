@@ -469,6 +469,9 @@ void NavEKF2_core::UpdateFilter(bool predict)
 
         // Update the filter status
         updateFilterStatus();
+
+        //hal.console->printf("Acc: N:%f E:%f D:%f\n", velDotNEDCurrent.x, velDotNEDCurrent.y, velDotNEDCurrent.z );
+
     }
 
     // Wind output forward from the fusion to output time horizon
@@ -596,6 +599,8 @@ void NavEKF2_core::calcOutputStates()
     // transform body delta velocities to delta velocities in the nav frame
     Vector3f delVelNav  = Tbn_temp*delVelNewCorrected;
     delVelNav.z += GRAVITY_MSS*imuDataNew.delVelDT;
+
+    velDotNEDCurrent = delVelNav/imuDataNew.delVelDT;
 
     // save velocity for use in trapezoidal integration for position calcuation
     Vector3f lastVelocity = outputDataNew.velocity;
