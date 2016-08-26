@@ -599,7 +599,9 @@ void NavEKF2_core::calcOutputStates()
     delVelNav.z += GRAVITY_MSS*imuDataNew.delVelDT;
 
     // calculate the rate of change of velocity (used as corrected raw acel)
-    velDotNEDCurrent = delVelNav/imuDataNew.delVelDT;
+    if (imuDataNew.delVelDT != 0.0f ){
+        velDotNEDCurrent = delVelNav/imuDataNew.delVelDT;
+    }
 
     // apply a first order lowpass filter: dt = 0.0025s fc = 3Hz alpha = dt / (dt + 1/(2*pi*fc)), alpha = 0.0450
     velDotNEDCurrentFilt = velDotNEDCurrent * 0.045f + velDotNEDCurrentFilt * 0.955f;
