@@ -717,9 +717,9 @@ private:
     uint32_t prevBetaStep_ms;       // time stamp of last synthetic sideslip fusion step
     uint32_t lastMagUpdate_us;      // last time compass was updated in usec
     Vector3f velDotNED;             // rate of change of velocity in NED frame
-    Vector3f velDotNEDCurrent;      // rate of change of velocity in NED frame at Current Time
     Vector3f velDotNEDfilt;         // low pass filtered velDotNED
-    Vector3f velDotNEDCurrentfilt;  // low pass filtered velDotNEDCurrent
+    Vector3f velDotNEDCurrent;      // rate of change of velocity in NED frame at Current Time
+    Vector3f velDotNEDCurrentFilt;  // low pass filtered velDotNEDCurrent
     uint32_t imuSampleTime_ms;      // time that the last IMU value was taken
     bool tasDataToFuse;             // true when new airspeed data is waiting to be fused
     uint32_t lastBaroReceived_ms;   // time last time we received baro height data
