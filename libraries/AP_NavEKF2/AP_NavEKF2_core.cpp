@@ -606,8 +606,8 @@ void NavEKF2_core::calcOutputStates()
         //Compute average accel on last 12ms
         velDotNEDCurrent = delNavDownSampled/delVelDTDownSampled;
 
-        // apply a first order lowpass filter: dt = 0.012s fc = 3Hz alpha = dt / (dt + 1/(2*pi*fc)), alpha = 0.0450
-        velDotNEDCurrentFilt = velDotNEDCurrent * 0.1845f + velDotNEDCurrentFilt * 0.8155f;
+        // apply a first order lowpass filter: dt = 0.012s fc = 25Hz alpha = dt / (dt + 1/(2*pi*fc)), alpha = 0.6534
+        velDotNEDCurrentFilt = velDotNEDCurrent * 0.6534f + velDotNEDCurrentFilt * 0.3466f;
 
         //Reset buffer
         delNavDownSampled.zero();
