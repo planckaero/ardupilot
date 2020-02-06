@@ -1282,9 +1282,6 @@ protected:
     
     const char *name() const override { return "PLANCKTRACKING"; }
     const char *name4() const override { return "PLTR"; }
-  
-    //if we want to land or transition to planck_land when we get back
-    bool _land_when_ready = false;
 };
 
 class ModePlanckRTB : public ModeGuided {
