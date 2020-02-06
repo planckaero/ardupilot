@@ -22,8 +22,12 @@ bool Copter::ModePlanckRTB::init(bool ignore_checks){
 }
 
 void Copter::ModePlanckRTB::run(){
-    if(!_is_landing)
-    {
+    //Check for a case where we requested the landing but our request was rejected
+    if(_is_landing && copter.planck_interface.was_last_request_rejected()) {
+        _is_landing = false;
+    }
+
+    if(!_is_landing) {
         //This checks if planck is ready to land and requests a landing
         if(copter.mode_planckland.init(true))
         {
