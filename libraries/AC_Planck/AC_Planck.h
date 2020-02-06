@@ -77,8 +77,13 @@ public:
   //Get a position, velocity, yaw command
   bool get_posvel_cmd(Location &loc, Vector3f &vel_cms);
 
-  //Returns true if the last command req was actively NACKd (not just waiting for the ACK)
-  bool was_last_request_rejected() { return (_last_cmd_acked == PLANCK_NACK); }
+  //Returns true if the last command req was actively NACKd or timed out
+  bool was_last_request_rejected() {
+    if(_ack_status == PLANCK_WAITING_FOR_ACK) {
+      return ((AP_HAL::millis() - _last_cmd_req_t_ms) > 500);
+    }
+    return (_ack_status == PLANCK_NACK);
+  }
 
 private:
 
@@ -112,11 +117,17 @@ private:
     PLANCK_ACK,
     PLANCK_NACK,
     PLANCK_WAITING_FOR_ACK
-  } _last_cmd_acked = PLANCK_WAITING_FOR_ACK;
+  } _ack_status = PLANCK_WAITING_FOR_ACK;
+  uint32_t _last_cmd_req_t_ms = 0;
 
   mavlink_channel_t _chan = MAVLINK_COMM_1;
 
   bool _was_at_location = false; //For debouncing at-location
 
   bool _is_status_ok(void) { return ((AP_HAL::millis() - _status.timestamp_ms) < 500); }
+  
+  void _sent_cmd_req() {
+    _last_cmd_req_t_ms = AP_HAL::millis();
+    _ack_status = PLANCK_WAITING_FOR_ACK;
+  };
 };
