@@ -77,6 +77,9 @@ public:
   //Get a position, velocity, yaw command
   bool get_posvel_cmd(Location &loc, Vector3f &vel_cms);
 
+  //Returns true if the last command req was actively NACKd (not just waiting for the ACK)
+  bool was_last_request_rejected() { return (_last_cmd_acked == PLANCK_NACK); }
+
 private:
 
   struct
@@ -103,6 +106,13 @@ private:
     bool at_location = false;
     uint32_t timestamp_ms = 0;
   }_status;
+
+  enum
+  {
+    PLANCK_ACK,
+    PLANCK_NACK,
+    PLANCK_WAITING_FOR_ACK
+  } _last_cmd_acked = PLANCK_WAITING_FOR_ACK;
 
   mavlink_channel_t _chan = MAVLINK_COMM_1;
 

@@ -666,6 +666,7 @@ void GCS_MAVLINK_Copter::handleMessage(mavlink_message_t* msg)
     //Handle any messages coming from planck's software
     case MAVLINK_MSG_ID_PLANCK_STATUS:
     case MAVLINK_MSG_ID_PLANCK_CMD_MSG:
+    case MAVLINK_MSG_ID_COMMAND_ACK:
         copter.planck_interface.handle_planck_mavlink_msg(chan, msg,
             copter.ahrs);
         break;
