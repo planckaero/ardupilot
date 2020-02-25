@@ -211,7 +211,8 @@ enum AutoMode {
     Auto_NavPayloadPlace,
     Auto_PlanckTakeoff,
     Auto_PlanckRTB,
-    Auto_PlanckWingman
+    Auto_PlanckWingman,
+    Auto_PlanckFindAndLand
 };
 
 // Guided modes
@@ -292,6 +293,14 @@ enum PayloadPlaceStateType {
     PayloadPlaceStateType_Ascending_Start,
     PayloadPlaceStateType_Ascending,
     PayloadPlaceStateType_Done,
+};
+
+enum PlanckFindAndLandStateType{
+    PlanckFindAndLand_MoveToLocation,
+    PlanckFindAndLand_Descend,
+    PlanckFindAndLand_Hover,
+    PlanckFindAndLand_PlanckLand,
+    PlanckFindAndLand_AscendAndWait
 };
 
 // bit options for DEV_OPTIONS parameter

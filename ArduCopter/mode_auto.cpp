@@ -33,7 +33,7 @@ bool Copter::ModeAuto::init(bool ignore_checks)
             gcs().send_text(MAV_SEVERITY_CRITICAL, "Auto: Missing Takeoff Cmd");
             return false;
         }
-        
+
         // If the mission starts with a planck takeoff command, make sure
         // that planck is ready for takeoff
         if(copter.mission.starts_with_planck_takeoff_cmd()) {
@@ -117,7 +117,7 @@ void Copter::ModeAuto::run()
     case Auto_NavPayloadPlace:
         payload_place_run();
         break;
-        
+
     case Auto_PlanckTakeoff:
         planck_takeoff_run();
         break;
@@ -128,6 +128,10 @@ void Copter::ModeAuto::run()
 
     case Auto_PlanckWingman:
         planck_wingman_run();
+        break;
+
+    case Auto_PlanckFindAndLand:
+        planck_findandland_run();
         break;
     }
 }
@@ -341,7 +345,7 @@ void Copter::ModeAuto::circle_start()
 // auto_spline_start - initialises waypoint controller to implement flying to a particular destination using the spline controller
 //  seg_end_type can be SEGMENT_END_STOP, SEGMENT_END_STRAIGHT or SEGMENT_END_SPLINE.  If Straight or Spline the next_destination should be provided
 void Copter::ModeAuto::spline_start(const Location_Class& destination, bool stopped_at_start,
-                               AC_WPNav::spline_segment_end_type seg_end_type, 
+                               AC_WPNav::spline_segment_end_type seg_end_type,
                                const Location_Class& next_destination)
 {
     _mode = Auto_Spline;
@@ -418,7 +422,7 @@ void Copter::ModeAuto::planck_rtb_start()
 {
     _mode = Auto_PlanckRTB;
 
-    //Tell planck to RTB 
+    //Tell planck to RTB
     copter.mode_planckrtb.init(true);
 }
 
@@ -432,6 +436,20 @@ void Copter::ModeAuto::planck_wingman_start()
 
     //Tell planck to start tracking
     copter.mode_planckwingman.init(true);
+}
+
+void Copter::ModeAuto::planck_findandland_start(const uint32_t min_alt_cm)
+{
+    _mode = Auto_PlanckFindAndLand;
+    //Save the current altitude and reset any timers
+    nav_planck_findandland.timed_out = false;
+    nav_planck_findandland.wait_start_timestamp = 0;
+    nav_planck_findandland.minimum_altitude_cm = min_alt_cm;
+
+    //Get the current altitude
+    if(!copter.current_loc.get_alt_cm(Location_Class::ALT_FRAME_ABOVE_TERRAIN, nav_planck_findandland.initial_altitude_cm)) {
+        copter.current_loc.get_alt_cm(Location_Class::ALT_FRAME_ABOVE_HOME, nav_planck_findandland.initial_altitude_cm);
+    }
 }
 
 // start_command - this function will be called when the ap_mission lib wishes to start a new command
@@ -522,16 +540,16 @@ bool Copter::ModeAuto::start_command(const AP_Mission::Mission_Command& cmd)
     case MAV_CMD_DO_SET_SERVO:
         copter.ServoRelayEvents.do_set_servo(cmd.content.servo.channel, cmd.content.servo.pwm);
         break;
-        
+
     case MAV_CMD_DO_SET_RELAY:
         copter.ServoRelayEvents.do_set_relay(cmd.content.relay.num, cmd.content.relay.state);
         break;
-        
+
     case MAV_CMD_DO_REPEAT_SERVO:
         copter.ServoRelayEvents.do_repeat_servo(cmd.content.repeat_servo.channel, cmd.content.repeat_servo.pwm,
                                          cmd.content.repeat_servo.repeat_count, cmd.content.repeat_servo.cycle_time * 1000.0f);
         break;
-        
+
     case MAV_CMD_DO_REPEAT_RELAY:
         copter.ServoRelayEvents.do_repeat_relay(cmd.content.repeat_relay.num, cmd.content.repeat_relay.repeat_count,
                                          cmd.content.repeat_relay.cycle_time * 1000.0f);
@@ -546,7 +564,7 @@ bool Copter::ModeAuto::start_command(const AP_Mission::Mission_Command& cmd)
         // point the camera to a specified angle
         do_mount_control(cmd);
         break;
-    
+
     case MAV_CMD_DO_FENCE_ENABLE:
 #if AC_FENCE == ENABLED
         if (cmd.p1 == 0) { //disable
@@ -610,6 +628,10 @@ bool Copter::ModeAuto::start_command(const AP_Mission::Mission_Command& cmd)
 
     case MAV_CMD_NAV_PLANCK_WINGMAN:
       do_planck_wingman(cmd);
+      break;
+
+    case MAV_CMD_NAV_PLANCK_FINDANDLAND:
+      do_planck_findandland(cmd);
       break;
 
     default:
@@ -797,7 +819,7 @@ bool Copter::ModeAuto::verify_command(const AP_Mission::Mission_Command& cmd)
     case MAV_CMD_DO_FENCE_ENABLE:
     case MAV_CMD_DO_WINCH:
         return true;
-        
+
     case MAV_CMD_NAV_PLANCK_TAKEOFF:
       return verify_planck_takeoff();
 
@@ -806,6 +828,9 @@ bool Copter::ModeAuto::verify_command(const AP_Mission::Mission_Command& cmd)
 
     case MAV_CMD_NAV_PLANCK_WINGMAN:
       return verify_planck_wingman();
+
+    case MAV_CMD_NAV_PLANCK_FINDANDLAND:
+      return verify_planck_findandland();
 
     default:
         // error message
@@ -962,7 +987,7 @@ void Copter::ModeAuto::land_run()
 
     // set motors to full range
     motors->set_desired_spool_state(AP_Motors::DESIRED_THROTTLE_UNLIMITED);
-    
+
     land_run_horizontal_control();
     land_run_vertical_control();
 }
@@ -1156,6 +1181,85 @@ void Copter::ModeAuto::planck_rtb_run()
 void Copter::ModeAuto::planck_wingman_run()
 {
     copter.mode_planckwingman.run();
+}
+
+void Copter::ModeAuto::planck_findandland_run()
+{
+    //Process is relatively simple:
+    //  1. Start by going to a location using the wpnav.
+    //  2. Once at the location, descend to a minimum altitude
+    //  3. During this time, monitor the planck status.
+    //     3a.) If it goes ready_for_land or either estimator goes healthy, start PlanckRTB
+    //  4. If planck never goes healthy, go back to the original altitude at this location and wait
+
+    //First off, check the state of planck
+    bool planck_ready = copter.planck_interface.ready_for_land() ||
+                        copter.planck_interface.get_commbox_state() ||
+                        copter.planck_interface.get_tag_tracking_state();
+
+    //When planck is ready, execute an RTB
+    if(planck_ready && nav_planck_findandland.state != PlanckFindAndLand_PlanckLand) {
+        nav_planck_findandland.state = PlanckFindAndLand_PlanckLand;
+        copter.mode_planckrtb.init(true);
+    }
+
+    switch(nav_planck_findandland.state) {
+        case PlanckFindAndLand_MoveToLocation:
+            if (copter.wp_nav->reached_wp_destination()) {
+                //Adjust the waypoint down to the minimum altitude
+                Location_Class current_loc = copter.current_loc;
+                current_loc.set_alt_cm(nav_planck_findandland.minimum_altitude_cm,Location_Class::ALT_FRAME_ABOVE_TERRAIN);
+                nav_planck_findandland.state = PlanckFindAndLand_Descend;
+            }
+            //Run the waypoint navigation controller
+            break;
+
+        case PlanckFindAndLand_Descend:
+            if (copter.wp_nav->reached_wp_destination() && nav_planck_findandland.wait_start_timestamp == 0) {
+                //Start a timer here
+                nav_planck_findandland.wait_start_timestamp = AP_HAL::millis();
+                nav_planck_findandland.state = PlanckFindAndLand_Hover;
+                break;
+            }
+            break;
+
+        case PlanckFindAndLand_Hover:
+            //If the timer has expired, reset it and start climbing
+            if(AP_HAL::millis() - nav_planck_findandland.wait_start_timestamp > 10E6) {  //10s
+                //Set a new target at the original altitude
+                Location_Class current_loc = copter.current_loc;
+                current_loc.set_alt_cm(nav_planck_findandland.initial_altitude_cm,Location_Class::ALT_FRAME_ABOVE_TERRAIN);
+                nav_planck_findandland.state = PlanckFindAndLand_AscendAndWait;
+                nav_planck_findandland.wait_start_timestamp = 0;
+                break;
+            }
+            break;
+
+        case PlanckFindAndLand_PlanckLand:
+            copter.mode_planckrtb.run();
+            return;
+
+        case PlanckFindAndLand_AscendAndWait:
+            //If the timer has expired, indicate that this mode is done
+            if(AP_HAL::millis() - nav_planck_findandland.wait_start_timestamp > 10E6) {  //10s
+                nav_planck_findandland.wait_start_timestamp = 0;
+                nav_planck_findandland.timed_out = true;
+            }
+            break;
+    }
+
+    //Run the waypoint navigation controller
+    // set motors to full range
+    motors->set_desired_spool_state(AP_Motors::DESIRED_THROTTLE_UNLIMITED);
+
+    // run waypoint controller
+    copter.failsafe_terrain_set_status(wp_nav->update_wpnav());
+
+    // call z-axis position controller (wpnav should have already updated it's alt target)
+    pos_control->update_z_controller();
+
+    // call attitude controller
+    attitude_control->input_euler_angle_roll_pitch_yaw(wp_nav->get_roll(), wp_nav->get_pitch(), auto_yaw.yaw(),true);
 }
 
 // terrain_adjusted_location: returns a Location with lat/lon from cmd
@@ -1661,6 +1765,18 @@ void Copter::ModeAuto::do_planck_wingman(const AP_Mission::Mission_Command& cmd)
     _planck_used = true;
 }
 
+void Copter::ModeAuto::do_planck_findandland(const AP_Mission::Mission_Command& cmd)
+{
+    nav_planck_findandland.state = PlanckFindAndLand_MoveToLocation;
+
+    Vector3f stopping_point;
+    loiter_nav->get_stopping_point_xy(stopping_point);
+    wp_start(stopping_point);
+
+    planck_findandland_start((int32_t)(cmd.p1 * 100));
+    _planck_used = true;
+}
+
 /********************************************************************************/
 //	Verify Nav (Must) commands
 /********************************************************************************/
@@ -1948,6 +2064,11 @@ bool Copter::ModeAuto::verify_planck_wingman()
     }
 
     return false;
+}
+
+bool Copter::ModeAuto::verify_planck_findandland()
+{
+    return (verify_planck_rtb() || nav_planck_findandland.timed_out);
 }
 
 /********************************************************************************/

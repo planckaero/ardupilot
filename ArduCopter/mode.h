@@ -294,6 +294,7 @@ public:
     void planck_takeoff_start(const float alt);
     void planck_rtb_start();
     void planck_wingman_start();
+    void planck_findandland_start(const uint32_t min_alt_cm);
     bool requires_planck() const override { return _planck_used; }
 
     bool landing_gear_should_be_deployed() const override;
@@ -338,6 +339,7 @@ private:
     void planck_takeoff_run();
     void planck_rtb_run();
     void planck_wingman_run();
+    void planck_findandland_run();
 
     void payload_place_start(const Vector3f& destination);
     void payload_place_run();
@@ -387,6 +389,7 @@ private:
     void do_planck_takeoff(const AP_Mission::Mission_Command& cmd);
     void do_planck_rtb(const AP_Mission::Mission_Command& cmd);
     void do_planck_wingman(const AP_Mission::Mission_Command& cmd);
+    void do_planck_findandland(const AP_Mission::Mission_Command& cmd);
 
     bool verify_takeoff();
     bool verify_land();
@@ -407,6 +410,7 @@ private:
     bool verify_planck_takeoff();
     bool verify_planck_rtb();
     bool verify_planck_wingman();
+    bool verify_planck_findandland();
 
     void auto_spline_start(const Location_Class& destination, bool stopped_at_start, AC_WPNav::spline_segment_end_type seg_end_type, const Location_Class& next_destination);
 
@@ -434,6 +438,14 @@ private:
         float descend_start_altitude;
         float descend_max; // centimetres
     } nav_payload_place;
+
+    struct {
+        PlanckFindAndLandStateType state = PlanckFindAndLand_MoveToLocation;
+        int32_t minimum_altitude_cm;
+        int32_t initial_altitude_cm;
+        uint32_t wait_start_timestamp = 0; // milliseconds
+        bool timed_out = false;
+    } nav_planck_findandland;
 
     bool _planck_used; //If planck is being used currently
 
@@ -1262,9 +1274,9 @@ protected:
 };
 
 class ModePlanckTracking : public ModeGuided {
-    
+
 public:
-    
+
     // inherit constructor
     using Copter::ModeGuided::Mode;
 
@@ -1279,10 +1291,10 @@ public:
     bool requires_planck() const override { return true; }
 
 protected:
-    
+
     const char *name() const override { return "PLANCKTRACKING"; }
     const char *name4() const override { return "PLTR"; }
-  
+
     //if we want to land or transition to planck_land when we get back
     bool _land_when_ready = false;
 };
@@ -1306,7 +1318,7 @@ protected:
 
     const char *name() const override { return "PLANCKRTB"; }
     const char *name4() const override { return "PRTB"; }
-    
+
     bool _is_landing = false;
 };
 
@@ -1350,8 +1362,8 @@ protected:
 
     const char *name() const override { return "PLANCKWINGMAN"; }
     const char *name4() const override { return "PLWM"; }
-  
-private:  
+
+private:
 
     uint32_t _next_req_send_t_ms = 0; //For sending new targets at a fixed rate
     const int8_t _send_rate_ms = 100; //10hz, 100ms
