@@ -447,9 +447,7 @@ void Copter::ModeAuto::planck_findandland_start(const uint32_t min_alt_cm)
     nav_planck_findandland.minimum_altitude_cm = min_alt_cm;
 
     //Get the current altitude
-    if(!copter.current_loc.get_alt_cm(Location_Class::ALT_FRAME_ABOVE_TERRAIN, nav_planck_findandland.initial_altitude_cm)) {
-        copter.current_loc.get_alt_cm(Location_Class::ALT_FRAME_ABOVE_HOME, nav_planck_findandland.initial_altitude_cm);
-    }
+    copter.current_loc.get_alt_cm(Location_Class::ALT_FRAME_ABOVE_HOME, nav_planck_findandland.initial_altitude_cm);
 }
 
 // start_command - this function will be called when the ap_mission lib wishes to start a new command
@@ -1201,6 +1199,7 @@ void Copter::ModeAuto::planck_findandland_run()
     if(planck_ready && nav_planck_findandland.state != PlanckFindAndLand_PlanckLand) {
         nav_planck_findandland.state = PlanckFindAndLand_PlanckLand;
         copter.mode_planckrtb.init(true);
+        printf("PLANCK: READY, LANDING\n");
     }
 
     switch(nav_planck_findandland.state) {
@@ -1208,8 +1207,10 @@ void Copter::ModeAuto::planck_findandland_run()
             if (copter.wp_nav->reached_wp_destination()) {
                 //Adjust the waypoint down to the minimum altitude
                 Location_Class current_loc = copter.current_loc;
-                current_loc.set_alt_cm(nav_planck_findandland.minimum_altitude_cm,Location_Class::ALT_FRAME_ABOVE_TERRAIN);
+                current_loc.set_alt_cm(nav_planck_findandland.minimum_altitude_cm,Location_Class::ALT_FRAME_ABOVE_HOME);
+                wp_nav->set_wp_destination(current_loc);
                 nav_planck_findandland.state = PlanckFindAndLand_Descend;
+                printf("PLANCK: AT DESTINATION, DESCENDING to %i\n", nav_planck_findandland.minimum_altitude_cm);
             }
             //Run the waypoint navigation controller
             break;
@@ -1219,18 +1220,21 @@ void Copter::ModeAuto::planck_findandland_run()
                 //Start a timer here
                 nav_planck_findandland.wait_start_timestamp = AP_HAL::millis();
                 nav_planck_findandland.state = PlanckFindAndLand_Hover;
+                printf("PLANCK: DESCENDED, NO TAG, STARTING TIMER\n");
                 break;
             }
             break;
 
         case PlanckFindAndLand_Hover:
             //If the timer has expired, reset it and start climbing
-            if(AP_HAL::millis() - nav_planck_findandland.wait_start_timestamp > 10E6) {  //10s
+            if(AP_HAL::millis() - nav_planck_findandland.wait_start_timestamp > 10E3) {  //10s
                 //Set a new target at the original altitude
                 Location_Class current_loc = copter.current_loc;
-                current_loc.set_alt_cm(nav_planck_findandland.initial_altitude_cm,Location_Class::ALT_FRAME_ABOVE_TERRAIN);
+                current_loc.set_alt_cm(nav_planck_findandland.initial_altitude_cm,Location_Class::ALT_FRAME_ABOVE_HOME);
+                wp_nav->set_wp_destination(current_loc);
                 nav_planck_findandland.state = PlanckFindAndLand_AscendAndWait;
                 nav_planck_findandland.wait_start_timestamp = 0;
+                printf("PLANCK: DESCENDED, NO TAG, ASCENDING to %i\n",nav_planck_findandland.initial_altitude_cm);
                 break;
             }
             break;
@@ -1240,10 +1244,15 @@ void Copter::ModeAuto::planck_findandland_run()
             return;
 
         case PlanckFindAndLand_AscendAndWait:
+            if (copter.wp_nav->reached_wp_destination() && nav_planck_findandland.wait_start_timestamp == 0) {
+                nav_planck_findandland.wait_start_timestamp = AP_HAL::millis();
+            }
+
             //If the timer has expired, indicate that this mode is done
-            if(AP_HAL::millis() - nav_planck_findandland.wait_start_timestamp > 10E6) {  //10s
+            if(AP_HAL::millis() - nav_planck_findandland.wait_start_timestamp > 10E3) {  //10s
                 nav_planck_findandland.wait_start_timestamp = 0;
                 nav_planck_findandland.timed_out = true;
+                printf("PLANCK: ASCENDED, TIMED OUT\n");
             }
             break;
     }
@@ -1769,9 +1778,9 @@ void Copter::ModeAuto::do_planck_findandland(const AP_Mission::Mission_Command& 
 {
     nav_planck_findandland.state = PlanckFindAndLand_MoveToLocation;
 
-    Vector3f stopping_point;
-    loiter_nav->get_stopping_point_xy(stopping_point);
-    wp_start(stopping_point);
+//    Vector3f stopping_point;
+//    wp_nav->get_wp_stopping_point(stopping_point);
+//    wp_start(stopping_point);
 
     planck_findandland_start((int32_t)(cmd.p1 * 100));
     _planck_used = true;
