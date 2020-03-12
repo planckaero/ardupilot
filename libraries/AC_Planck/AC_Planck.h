@@ -119,15 +119,17 @@ private:
     PLANCK_WAITING_FOR_ACK
   } _ack_status = PLANCK_WAITING_FOR_ACK;
   uint32_t _last_cmd_req_t_ms = 0;
+  uint16_t _last_cmd_req_id;
 
   mavlink_channel_t _chan = MAVLINK_COMM_1;
 
   bool _was_at_location = false; //For debouncing at-location
 
   bool _is_status_ok(void) { return ((AP_HAL::millis() - _status.timestamp_ms) < 500); }
-  
-  void _sent_cmd_req() {
+
+  void _sent_cmd_req(uint16_t id) {
     _last_cmd_req_t_ms = AP_HAL::millis();
     _ack_status = PLANCK_WAITING_FOR_ACK;
+    _last_cmd_req_id = id;
   };
 };

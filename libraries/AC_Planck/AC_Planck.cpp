@@ -17,8 +17,10 @@ void AC_Planck::handle_planck_mavlink_msg(const mavlink_channel_t &chan, const m
             break;
         }
 
-        //Update the status
-        _ack_status = (ack.result == 1 ? PLANCK_ACK : PLANCK_NACK);
+        //Update the status if this matches the last command request sent and that we actually sent a request previously
+        if(ack.command == _last_cmd_req_id && _last_cmd_req_t_ms > 0) {
+          _ack_status = (ack.result == 1 ? PLANCK_ACK : PLANCK_NACK);
+        }
         break;
      }
 
@@ -217,7 +219,7 @@ void AC_Planck::request_takeoff(const float alt)
     PLANCK_CMD_REQ_TAKEOFF,//uint8_t type
     alt,                   //float param1
     0,0,0,0,0);
-  _sent_cmd_req();
+  _sent_cmd_req(PLANCK_CMD_REQ_TAKEOFF);
 }
 
 void AC_Planck::request_alt_change(const float alt)
@@ -235,7 +237,7 @@ void AC_Planck::request_alt_change(const float alt)
     alt,              //param4
     0,                //param5
     false);           //param6
-  _sent_cmd_req();
+  _sent_cmd_req(PLANCK_CMD_REQ_MOVE_TARGET);
 }
 
 void AC_Planck::request_rtb(const float alt, const float rate_up, const float rate_down, const float rate_xy)
@@ -251,7 +253,7 @@ void AC_Planck::request_rtb(const float alt, const float rate_up, const float ra
     rate_down,             //float param3
     rate_xy,               //float param4
     0,0);
-  _sent_cmd_req();
+  _sent_cmd_req(PLANCK_CMD_REQ_RTB);
 }
 
 void AC_Planck::request_land(const float descent_rate)
@@ -264,7 +266,7 @@ void AC_Planck::request_land(const float descent_rate)
     PLANCK_CMD_REQ_LAND,   //uint8_t type
     descent_rate,          //float param1
     0,0,0,0,0);
-  _sent_cmd_req();
+  _sent_cmd_req(PLANCK_CMD_REQ_LAND);
 }
 
 //Move the current tracking target, either to an absolute offset or by a rate
@@ -283,7 +285,7 @@ void AC_Planck::request_move_target(const Vector3f offset_cmd_NED, const bool is
     offset_cmd_NED.z, //param4
     is_rate,          //param5
     0);               //param6
-  _sent_cmd_req();
+  _sent_cmd_req(PLANCK_CMD_REQ_MOVE_TARGET);
 
   //If the target has moved, the _was_at_location flag must go false until we
   //hear otherwise from planck
@@ -298,7 +300,7 @@ void AC_Planck::stop_commanding(void)
     PLANCK_CTRL_COMP_ID,   //uint8_t target_component,
     PLANCK_CMD_REQ_STOP,   //uint8_t type
     0,0,0,0,0,0);
-  _sent_cmd_req();
+  _sent_cmd_req(PLANCK_CMD_REQ_STOP);
 }
 
 //Get an accel, yaw, z_rate command
