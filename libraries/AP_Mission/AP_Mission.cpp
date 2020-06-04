@@ -55,7 +55,7 @@ void AP_Mission::init()
     // If Mission Clear bit is set then it should clear the mission, otherwise retain the mission.
     if (AP_MISSION_MASK_MISSION_CLEAR & _options) {
     	gcs().send_text(MAV_SEVERITY_INFO, "Clearing Mission");
-    	clear();	
+    	clear();
     }
 
     _last_change_time_ms = AP_HAL::millis();
@@ -68,7 +68,7 @@ void AP_Mission::start()
     _flags.state = MISSION_RUNNING;
 
     reset(); // reset mission to the first command, resets jump tracking
-    
+
     // advance to the first command
     if (!advance_current_nav_cmd()) {
         // on failure set mission complete
@@ -236,7 +236,7 @@ bool AP_Mission::clear()
 /// trucate - truncate any mission items beyond index
 void AP_Mission::truncate(uint16_t index)
 {
-    if ((unsigned)_cmd_total > index) {        
+    if ((unsigned)_cmd_total > index) {
         _cmd_total.set_and_save(index);
     }
 }
@@ -372,7 +372,7 @@ bool AP_Mission::is_nav_cmd(const Mission_Command& cmd)
     // and planck commands
     return (cmd.id <= MAV_CMD_NAV_LAST || cmd.id == MAV_CMD_NAV_SET_YAW_SPEED ||
       cmd.id == MAV_CMD_NAV_PLANCK_RTB || cmd.id == MAV_CMD_NAV_PLANCK_TAKEOFF ||
-      cmd.id == MAV_CMD_NAV_PLANCK_WINGMAN);
+      cmd.id == MAV_CMD_NAV_PLANCK_WINGMAN || cmd.id == MAV_CMD_NAV_PLANCK_FINDANDLAND);
 }
 
 /// get_next_nav_cmd - gets next "navigation" command found at or after start_index
@@ -631,7 +631,7 @@ bool AP_Mission::stored_in_location(uint16_t id)
 bool AP_Mission::write_cmd_to_storage(uint16_t index, const Mission_Command& cmd)
 {
     WITH_SEMAPHORE(_rsem);
-    
+
     // range check cmd's index
     if (index >= num_commands_max()) {
         return false;
@@ -749,7 +749,7 @@ MAV_MISSION_RESULT AP_Mission::mavlink_int_to_mission_cmd(const mavlink_mission_
     case 0:
         // this is reserved for storing 16 bit command IDs
         return MAV_MISSION_INVALID;
-        
+
     case MAV_CMD_NAV_WAYPOINT:                          // MAV ID: 16
     {
         /*
@@ -983,7 +983,7 @@ MAV_MISSION_RESULT AP_Mission::mavlink_int_to_mission_cmd(const mavlink_mission_
         cmd.content.do_engine_control.start_control = (packet.param1>0);
         cmd.content.do_engine_control.cold_start = (packet.param2>0);
         cmd.content.do_engine_control.height_delay_cm = packet.param3*100;
-        break;        
+        break;
 
     case MAV_CMD_NAV_PAYLOAD_PLACE:
         cmd.p1 = packet.param1*100; // copy max-descend parameter (m->cm)
@@ -1013,6 +1013,10 @@ MAV_MISSION_RESULT AP_Mission::mavlink_int_to_mission_cmd(const mavlink_mission_
         cmd.content.planck_wingman.x = packet.param1;
         cmd.content.planck_wingman.y = packet.param2;
         cmd.content.planck_wingman.z_cm = (int16_t)(packet.param3*100);
+        break;
+
+    case MAV_CMD_NAV_PLANCK_FINDANDLAND:
+        cmd.p1 = packet.param1;
         break;
 
     default:
@@ -1087,7 +1091,7 @@ MAV_MISSION_RESULT AP_Mission::convert_MISSION_ITEM_to_MISSION_ITEM_INT(const ma
     mav_cmd.current = packet.current;
     mav_cmd.autocontinue = packet.autocontinue;
     mav_cmd.mission_type = packet.mission_type;
-    
+
     /*
       the strategy for handling both MISSION_ITEM and MISSION_ITEM_INT
       is to pass the lat/lng in MISSION_ITEM_INT straight through, and
@@ -1162,10 +1166,10 @@ MAV_MISSION_RESULT AP_Mission::convert_MISSION_ITEM_INT_to_MISSION_ITEM(const ma
 
 // mavlink_cmd_long_to_mission_cmd - converts a mavlink cmd long to an AP_Mission::Mission_Command object which can be stored to eeprom
 // return MAV_MISSION_ACCEPTED on success, MAV_MISSION_RESULT error on failure
-MAV_MISSION_RESULT AP_Mission::mavlink_cmd_long_to_mission_cmd(const mavlink_command_long_t& packet, AP_Mission::Mission_Command& cmd) 
+MAV_MISSION_RESULT AP_Mission::mavlink_cmd_long_to_mission_cmd(const mavlink_command_long_t& packet, AP_Mission::Mission_Command& cmd)
 {
     mavlink_mission_item_int_t miss_item = {0};
- 
+
     miss_item.param1 = packet.param1;
     miss_item.param2 = packet.param2;
     miss_item.param3 = packet.param3;
@@ -1199,7 +1203,7 @@ bool AP_Mission::mission_cmd_to_mavlink_int(const AP_Mission::Mission_Command& c
     case 0:
         // this is reserved for 16 bit command IDs
         return false;
-        
+
     case MAV_CMD_NAV_WAYPOINT:                          // MAV ID: 16
 #if APM_BUILD_TYPE(APM_BUILD_ArduPlane)
         // acceptance radius in meters
@@ -1428,7 +1432,7 @@ bool AP_Mission::mission_cmd_to_mavlink_int(const AP_Mission::Mission_Command& c
         packet.param1 = cmd.content.do_engine_control.start_control?1:0;
         packet.param2 = cmd.content.do_engine_control.cold_start?1:0;
         packet.param3 = cmd.content.do_engine_control.height_delay_cm*0.01f;
-        break;        
+        break;
 
     case MAV_CMD_NAV_PAYLOAD_PLACE:
         packet.param1 = cmd.p1/100.0f; // copy max-descend parameter (m->cm)
@@ -1458,6 +1462,10 @@ bool AP_Mission::mission_cmd_to_mavlink_int(const AP_Mission::Mission_Command& c
         packet.param1 = cmd.content.planck_wingman.x;
         packet.param2 = cmd.content.planck_wingman.y;
         packet.param3 = (float)cmd.content.planck_wingman.z_cm/100.;
+        break;
+
+    case MAV_CMD_NAV_PLANCK_FINDANDLAND:
+        packet.param1 = cmd.p1;
         break;
 
     default:
@@ -1825,7 +1833,7 @@ uint16_t AP_Mission::num_commands_max(void) const
 // find the nearest landing sequence starting point (DO_LAND_START) and
 // return its index.  Returns 0 if no appropriate DO_LAND_START point can
 // be found.
-uint16_t AP_Mission::get_landing_sequence_start() 
+uint16_t AP_Mission::get_landing_sequence_start()
 {
     struct Location current_loc;
 
@@ -1847,7 +1855,7 @@ uint16_t AP_Mission::get_landing_sequence_start()
             if (min_distance < 0 || tmp_distance < min_distance) {
                 min_distance = tmp_distance;
                 landing_start_index = i;
-            }           
+            }
         }
     }
 
@@ -2006,6 +2014,8 @@ const char *AP_Mission::Mission_Command::type() const {
         return "PlanckRTB";
     case MAV_CMD_NAV_PLANCK_WINGMAN:
         return "PlanckWingman";
+    case MAV_CMD_NAV_PLANCK_FINDANDLAND:
+        return "PlanckFindAndLand";
 
     default:
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL

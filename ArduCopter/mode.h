@@ -363,6 +363,7 @@ public:
     void planck_takeoff_start(const float alt);
     void planck_rtb_start();
     void planck_wingman_start();
+    void planck_findandland_start(const uint32_t min_alt_cm);
     bool requires_planck() const override { return _planck_used; }
 
     bool is_landing() const override;
@@ -414,6 +415,7 @@ private:
     void planck_takeoff_run();
     void planck_rtb_run();
     void planck_wingman_run();
+    void planck_findandland_run();
 
     Location loc_from_cmd(const AP_Mission::Mission_Command& cmd) const;
 
@@ -460,6 +462,7 @@ private:
     void do_planck_takeoff(const AP_Mission::Mission_Command& cmd);
     void do_planck_rtb(const AP_Mission::Mission_Command& cmd);
     void do_planck_wingman(const AP_Mission::Mission_Command& cmd);
+    void do_planck_findandland(const AP_Mission::Mission_Command& cmd);
 
     bool verify_takeoff();
     bool verify_land();
@@ -482,6 +485,7 @@ private:
     bool verify_planck_takeoff();
     bool verify_planck_rtb();
     bool verify_planck_wingman();
+    bool verify_planck_findandland();
 
     // Loiter control
     uint16_t loiter_time_max;                // How long we should stay in Loiter Mode for mission scripting (time in seconds)
@@ -515,6 +519,15 @@ private:
         float descend_start_altitude;
         float descend_max; // centimetres
     } nav_payload_place;
+
+    struct {
+        PlanckFindAndLandStateType state = PlanckFindAndLand_MoveToLocation;
+        int32_t minimum_altitude_cm;
+        int32_t initial_altitude_cm;
+        uint32_t wait_start_timestamp = 0; // milliseconds
+        bool timed_out = false;
+    } nav_planck_findandland;
+
 
     bool _planck_used; //If planck is being used currently
 };
@@ -1372,7 +1385,7 @@ protected:
     uint32_t last_log_ms;   // system time of last time desired velocity was logging
 };
 
-class ModeZigZag : public Mode {        
+class ModeZigZag : public Mode {
 
 public:
 
@@ -1467,7 +1480,7 @@ private:
         FLARE,
         TOUCH_DOWN,
         BAIL_OUT } phase_switch;
-        
+
     enum class Navigation_Decision {
         USER_CONTROL_STABILISED,
         STRAIGHT_AHEAD,
@@ -1588,7 +1601,7 @@ protected:
     const char *name() const override { return "PLANCKWINGMAN"; }
     const char *name4() const override { return "PLWM"; }
 
-private:  
+private:
 
     uint32_t _next_req_send_t_ms = 0; //For sending new targets at a fixed rate
     const int8_t _send_rate_ms = 100; //10hz, 100ms
