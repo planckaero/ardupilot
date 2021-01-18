@@ -417,6 +417,10 @@ protected:
     MAV_RESULT handle_command_get_home_position(const mavlink_command_long_t &packet);
     MAV_RESULT handle_command_do_fence_enable(const mavlink_command_long_t &packet);
 
+    // reduce effect of vehicle Yaw and gimbal pitch with increasing camera zoom
+    MAV_RESULT handle_command_do_scale_with_zoom(const mavlink_command_long_t &packet);
+    float scale_with_zoom = 1.0;
+    
     void handle_optical_flow(const mavlink_message_t &msg);
 
     MAV_RESULT handle_fixed_mag_cal_yaw(const mavlink_command_long_t &packet);
