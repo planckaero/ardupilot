@@ -685,11 +685,17 @@ MAV_RESULT GCS_MAVLINK_Copter::handle_command_long_packet(const mavlink_command_
         // param2 : speed during change [deg per second]
         // param3 : direction (-1:ccw, +1:cw)
         // param4 : relative offset (1) or absolute angle (0)
-        if ((packet.param1 >= 0.0f)   &&
-            (packet.param1 <= 360.0f) &&
-            (is_zero(packet.param4) || is_equal(packet.param4,1.0f))) {
+        if ((packet.param1 < 0.0f) || (packet.param1 > 360.0f)) {
+            return MAV_RESULT_FAILED;
+        }
+        if (is_zero(packet.param4) || is_equal(packet.param4,1.0f)) {
+            float scaled_p1 = packet.param1;
+            // apply zoom scaling only to the relative offset
+            if (is_equal(packet.param4,1.0f)) {
+                scaled_p1 = scaled_p1 * GCS_MAVLINK::scale_with_zoom;
+            }
             copter.flightmode->auto_yaw.set_fixed_yaw(
-                packet.param1,
+                scaled_p1,
                 packet.param2,
                 (int8_t)packet.param3,
                 is_positive(packet.param4));
@@ -1321,7 +1327,7 @@ void GCS_MAVLINK_Copter::handleMessage(const mavlink_message_t &msg)
         copter.g2.toy_mode.handle_message(msg);
         break;
 #endif
-        
+
     default:
         handle_common_message(msg);
         break;
