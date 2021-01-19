@@ -59,7 +59,7 @@
 
 #define AP_MOUNT_ALEXMOS_SPEED 30 // degree/s2
 
-#define VALUE_TO_DEGREE(d) ((float)((d * 720) >> 15))
+#define VALUE_TO_DEGREE(d) ((float)((d * 0.02197265625f)))
 #define DEGREE_TO_VALUE(d) ((int16_t)((float)(d)*(1.0f/0.02197265625f)))
 #define DEGREE_PER_SEC_TO_VALUE(d) ((int16_t)((float)(d)*(1.0f/0.1220740379f)))
 
