@@ -499,7 +499,13 @@ void ModePosHold::run()
     pitch = constrain_float(pitch, -angle_max, angle_max);
 
     // call attitude controller
-    attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(roll, pitch, target_yaw_rate);
+    if (auto_yaw.mode() != AUTO_YAW_FIXED) {
+        attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(roll, pitch, target_yaw_rate);
+    }
+    else {
+        // roll, pitch from pilot, yaw heading from auto_heading()
+        attitude_control->input_euler_angle_roll_pitch_yaw(roll, pitch, auto_yaw.yaw(), true);
+    }
 
     // call z-axis position controller
     pos_control->update_z_controller();

@@ -72,7 +72,13 @@ void ModeStabilize_Heli::run()
     }
 
     // call attitude controller
-    attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(target_roll, target_pitch, target_yaw_rate);
+    if (auto_yaw.mode() != AUTO_YAW_FIXED) {
+        attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(target_roll, target_pitch, target_yaw_rate);
+    }
+    else {
+        // roll, pitch from pilot, yaw heading from auto_heading()
+        attitude_control->input_euler_angle_roll_pitch_yaw(target_roll, target_pitch, auto_yaw.yaw(), true);
+    }
 
     // output pilot's throttle - note that TradHeli does not used angle-boost
     attitude_control->set_throttle_out(pilot_throttle_scaled, false, g.throttle_filt);
