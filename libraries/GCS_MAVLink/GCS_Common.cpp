@@ -39,6 +39,8 @@
 #include <AP_OpticalFlow/OpticalFlow.h>
 #include <AP_Baro/AP_Baro.h>
 
+float g_scale_with_zoom = 1.0f;
+
 #include <stdio.h>
 
 #if HAL_RCINPUT_WITH_AP_RADIO
@@ -159,6 +161,9 @@ bool GCS_MAVLINK::init(uint8_t instance)
         // after experiments with MAVLink2
         status->flags |= MAVLINK_STATUS_FLAG_OUT_MAVLINK1;
     }
+
+    // default value disables scaling
+    //scale_with_zoom = 1.0f;
 
     return true;
 }
@@ -3692,9 +3697,9 @@ MAV_RESULT GCS_MAVLINK::handle_command_mount(const mavlink_command_long_t &packe
 
     // scale the pitch, roll, yaw with zoom
     mavlink_command_long_t scaled_packet = packet;
-    scaled_packet.param1 = scaled_packet.param1 * scale_with_zoom;
-    scaled_packet.param2 = scaled_packet.param2 * scale_with_zoom;
-    scaled_packet.param3 = scaled_packet.param3 * scale_with_zoom;
+    scaled_packet.param1 = scaled_packet.param1 * g_scale_with_zoom;
+    scaled_packet.param2 = scaled_packet.param2 * g_scale_with_zoom;
+    scaled_packet.param3 = scaled_packet.param3 * g_scale_with_zoom;
     return mount->handle_command_long(scaled_packet);
 }
 
@@ -3725,15 +3730,7 @@ MAV_RESULT GCS_MAVLINK::handle_command_do_set_home(const mavlink_command_long_t 
 
 MAV_RESULT GCS_MAVLINK::handle_command_do_scale_with_zoom(const mavlink_command_long_t &packet)
 {
-    scale_with_zoom = packet.param1;
-
-    if (scale_with_zoom < 0.0f) {
-        scale_with_zoom = 0.0f;
-    }
-    else if (scale_with_zoom > 1.0f) {
-        scale_with_zoom = 1.0f;
-    }
-
+    g_scale_with_zoom = packet.param1;
     return MAV_RESULT_ACCEPTED;
 }
 

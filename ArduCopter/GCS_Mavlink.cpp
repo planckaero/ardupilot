@@ -2,6 +2,8 @@
 
 #include "GCS_Mavlink.h"
 
+extern float g_scale_with_zoom;
+
 /*
  *  !!NOTE!!
  *
@@ -693,7 +695,7 @@ MAV_RESULT GCS_MAVLINK_Copter::handle_command_long_packet(const mavlink_command_
             bool relative_angle = is_positive(packet.param4);
             if (relative_angle) {
                 // apply zoom scaling only to the relative offset
-                scaled_p1 = scaled_p1 * GCS_MAVLINK::scale_with_zoom;
+                scaled_p1 = scaled_p1 * g_scale_with_zoom; //GCS_MAVLINK::scale_with_zoom;
             }
             copter.flightmode->auto_yaw.set_fixed_yaw(
                 scaled_p1,
