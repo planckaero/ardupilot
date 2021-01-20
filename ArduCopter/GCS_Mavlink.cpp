@@ -690,15 +690,16 @@ MAV_RESULT GCS_MAVLINK_Copter::handle_command_long_packet(const mavlink_command_
         }
         if (is_zero(packet.param4) || is_equal(packet.param4,1.0f)) {
             float scaled_p1 = packet.param1;
-            // apply zoom scaling only to the relative offset
-            if (is_equal(packet.param4,1.0f)) {
+            bool relative_angle = is_positive(packet.param4);
+            if (relative_angle) {
+                // apply zoom scaling only to the relative offset
                 scaled_p1 = scaled_p1 * GCS_MAVLINK::scale_with_zoom;
             }
             copter.flightmode->auto_yaw.set_fixed_yaw(
                 scaled_p1,
                 packet.param2,
                 (int8_t)packet.param3,
-                is_positive(packet.param4));
+                relative_angle);
             return MAV_RESULT_ACCEPTED;
         }
         return MAV_RESULT_FAILED;

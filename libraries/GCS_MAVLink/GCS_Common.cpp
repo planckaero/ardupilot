@@ -3692,11 +3692,9 @@ MAV_RESULT GCS_MAVLINK::handle_command_mount(const mavlink_command_long_t &packe
 
     // scale the pitch, roll, yaw with zoom
     mavlink_command_long_t scaled_packet = packet;
-    if (!is_equal(GCS_MAVLINK::scale_with_zoom, 1.0f)) {
-        scaled_packet.param1 = scaled_packet.param1 * GCS_MAVLINK::scale_with_zoom;
-        scaled_packet.param2 = scaled_packet.param2 * GCS_MAVLINK::scale_with_zoom;
-        scaled_packet.param3 = scaled_packet.param3 * GCS_MAVLINK::scale_with_zoom;
-    }
+    scaled_packet.param1 = scaled_packet.param1 * scale_with_zoom;
+    scaled_packet.param2 = scaled_packet.param2 * scale_with_zoom;
+    scaled_packet.param3 = scaled_packet.param3 * scale_with_zoom;
     return mount->handle_command_long(scaled_packet);
 }
 
@@ -3727,13 +3725,13 @@ MAV_RESULT GCS_MAVLINK::handle_command_do_set_home(const mavlink_command_long_t 
 
 MAV_RESULT GCS_MAVLINK::handle_command_do_scale_with_zoom(const mavlink_command_long_t &packet)
 {
-    GCS_MAVLINK::scale_with_zoom = packet.param1;
+    scale_with_zoom = packet.param1;
 
-    if (GCS_MAVLINK::scale_with_zoom < 0.0f) {
-        GCS_MAVLINK::scale_with_zoom = 0.0f;
+    if (scale_with_zoom < 0.0f) {
+        scale_with_zoom = 0.0f;
     }
-    else if (GCS_MAVLINK::scale_with_zoom > 1.0f) {
-        GCS_MAVLINK::scale_with_zoom = 1.0f;
+    else if (scale_with_zoom > 1.0f) {
+        scale_with_zoom = 1.0f;
     }
 
     return MAV_RESULT_ACCEPTED;
