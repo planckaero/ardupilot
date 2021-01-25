@@ -162,15 +162,13 @@ void AP_Mount_Alexmos::control_axis(const Vector3f& angle, bool target_in_degree
     alexmos_parameters outgoing_buffer;
     outgoing_buffer.angle_speed.mode_roll = get_control_mode(_state._roll_input_mode);
     outgoing_buffer.angle_speed.mode_pitch = get_control_mode(_state._pitch_input_mode);
-//    outgoing_buffer.angle_speed.mode_yaw = get_control_mode(_state._yaw_input_mode);
-//    outgoing_buffer.angle_speed.mode_yaw = AP_MOUNT_ALEXMOS_MODE_SPEED;
     outgoing_buffer.angle_speed.mode_yaw = AP_MOUNT_ALEXMOS_MODE_NO_CONTROL;
     outgoing_buffer.angle_speed.speed_roll = DEGREE_PER_SEC_TO_VALUE(target_deg.x);
     outgoing_buffer.angle_speed.angle_roll = DEGREE_TO_VALUE(target_deg.x);
     outgoing_buffer.angle_speed.speed_pitch = DEGREE_PER_SEC_TO_VALUE(target_deg.y);
     outgoing_buffer.angle_speed.angle_pitch = DEGREE_TO_VALUE(target_deg.y);
-//    outgoing_buffer.angle_speed.speed_yaw = DEGREE_PER_SEC_TO_VALUE(target_deg.z);
-//    outgoing_buffer.angle_speed.angle_yaw = DEGREE_TO_VALUE(target_deg.z);
+    // Deliberately not commanding target_deg.z (yaw) because we are relying on Alexmos'
+    // follow yaw mode.  Explicitly commanding yaw interferes with follow yaw mode.
     send_command(CMD_CONTROL, (uint8_t *)&outgoing_buffer.angle_speed, sizeof(alexmos_angles_speed));
 }
 
@@ -248,9 +246,9 @@ void AP_Mount_Alexmos::parse_body()
             // The yaw angle reported by the IMU (angle_yaw) is very unreliable
             // so use the body frame angle (stator_rotor_angle_yaw) unless
             // the user specifically requests it (AP_Mount::Input_Mode_Angle_Absolute_Frame)
-//            if (_state._yaw_input_mode != AP_Mount::Input_Mode_Angle_Absolute_Frame) {
+            if (_state._yaw_input_mode != AP_Mount::Input_Mode_Angle_Absolute_Frame) {
                 _current_angle.z = VALUE_TO_DEGREE(_buffer.angles_ext.stator_rotor_angle_yaw);
-//            }
+            }
             break;
 
         case CMD_READ_PARAMS:
