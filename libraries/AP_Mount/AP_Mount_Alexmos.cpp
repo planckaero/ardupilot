@@ -41,12 +41,6 @@ void AP_Mount_Alexmos::update()
         case MAV_MOUNT_MODE_MAVLINK_TARGETING:
             // do nothing because earth-frame angle targets (i.e. _angle_ef_target_rad) should have already been set by a MOUNT_CONTROL message from GCS
             control_axis(_angle_ef_target_rad, false);
-
-//            if (get_control_mode(_state._yaw_input_mode) == AP_MOUNT_ALEXMOS_MODE_SPEED) {
-                get_angles_ext();
-                _angle_ef_target_rad.z = -_current_angle.z/20.0;
-//            }
-
             break;
 
         // RC radio manual angle control, but with stabilization from the AHRS
@@ -169,13 +163,14 @@ void AP_Mount_Alexmos::control_axis(const Vector3f& angle, bool target_in_degree
     outgoing_buffer.angle_speed.mode_roll = get_control_mode(_state._roll_input_mode);
     outgoing_buffer.angle_speed.mode_pitch = get_control_mode(_state._pitch_input_mode);
 //    outgoing_buffer.angle_speed.mode_yaw = get_control_mode(_state._yaw_input_mode);
-    outgoing_buffer.angle_speed.mode_yaw = AP_MOUNT_ALEXMOS_MODE_SPEED;
+//    outgoing_buffer.angle_speed.mode_yaw = AP_MOUNT_ALEXMOS_MODE_SPEED;
+    outgoing_buffer.angle_speed.mode_yaw = AP_MOUNT_ALEXMOS_MODE_NO_CONTROL;
     outgoing_buffer.angle_speed.speed_roll = DEGREE_PER_SEC_TO_VALUE(target_deg.x);
     outgoing_buffer.angle_speed.angle_roll = DEGREE_TO_VALUE(target_deg.x);
     outgoing_buffer.angle_speed.speed_pitch = DEGREE_PER_SEC_TO_VALUE(target_deg.y);
     outgoing_buffer.angle_speed.angle_pitch = DEGREE_TO_VALUE(target_deg.y);
-    outgoing_buffer.angle_speed.speed_yaw = DEGREE_PER_SEC_TO_VALUE(target_deg.z);
-    outgoing_buffer.angle_speed.angle_yaw = DEGREE_TO_VALUE(target_deg.z);
+//    outgoing_buffer.angle_speed.speed_yaw = DEGREE_PER_SEC_TO_VALUE(target_deg.z);
+//    outgoing_buffer.angle_speed.angle_yaw = DEGREE_TO_VALUE(target_deg.z);
     send_command(CMD_CONTROL, (uint8_t *)&outgoing_buffer.angle_speed, sizeof(alexmos_angles_speed));
 }
 
