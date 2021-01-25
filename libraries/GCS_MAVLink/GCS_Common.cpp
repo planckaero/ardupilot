@@ -162,9 +162,6 @@ bool GCS_MAVLINK::init(uint8_t instance)
         status->flags |= MAVLINK_STATUS_FLAG_OUT_MAVLINK1;
     }
 
-    // default value disables scaling
-    //scale_with_zoom = 1.0f;
-
     return true;
 }
 
