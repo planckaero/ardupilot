@@ -683,11 +683,11 @@ MAV_RESULT GCS_MAVLINK_Copter::handle_command_long_packet(const mavlink_command_
 #endif
 
     case MAV_CMD_CONDITION_YAW:
-        // param1 : target angle [0-360]
+        // param1 : target angle [0-360)
         // param2 : speed during change [deg per second]
         // param3 : direction (-1:ccw, +1:cw)
         // param4 : relative offset (1) or absolute angle (0)
-        if ((packet.param1 < 0.0f) || (packet.param1 > 360.0f)) {
+        if ((packet.param1 < 0.0f) || (packet.param1 >= 360.0f)) {
             return MAV_RESULT_FAILED;
         }
         if (is_zero(packet.param4) || is_equal(packet.param4,1.0f)) {
