@@ -499,9 +499,11 @@ void ModePosHold::run()
     pitch = constrain_float(pitch, -angle_max, angle_max);
 
     // call attitude controller
-    if (auto_yaw.mode() != AUTO_YAW_FIXED
-        || target_yaw_rate > 200 || target_yaw_rate < -200) { // range of target_yaw_rate is about -10000 to 10000
-        // Allow the pilot to override the yaw_condition command if the commanded yaw is above a threshold
+    if ((auto_yaw.mode() != AUTO_YAW_FIXED)
+        || (target_yaw_rate > 200) || (target_yaw_rate < -200)) {
+        // the total range of target_yaw_rate is about -10000 to 10000,
+        // set the deadband to 200/10000 or 2% of the total range,
+        // allow the pilot to override the yaw_condition command if the commanded yaw is outside the deadband
         attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(roll, pitch, target_yaw_rate);
     }
     else {
