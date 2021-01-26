@@ -278,8 +278,6 @@ public:
 
     MAV_RESULT set_message_interval(uint32_t msg_id, int32_t interval_us);
 
-    //float scale_with_zoom = 1.0;
-
 protected:
 
     virtual bool in_hil_mode() const { return false; }
