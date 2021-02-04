@@ -625,6 +625,10 @@ MAV_RESULT GCS_MAVLINK_Copter::handle_command_mount(const mavlink_command_long_t
             mount->mount_yaw_follow_mode = AP_Mount::vehicle_yaw_follows_gimbal;
             return GCS_MAVLINK::handle_command_mount(packet);
         }
+        break;
+    case MAV_CMD_DO_MOUNT_CONFIGURE:
+        return GCS_MAVLINK::handle_command_mount(packet);
+        break;
     default:
         break;
     }
