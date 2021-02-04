@@ -569,7 +569,7 @@ void AP_Mount::set_angle_targets(uint8_t instance, float roll, float tilt, float
 
 
 #define VEHICLE_YAW_SCALE 0.1f
-float AP_Mount::get_yaw_rate()
+float AP_Mount::get_follow_yaw_rate()
 {
     return VEHICLE_YAW_SCALE * yaw_encoder_readback;
 }

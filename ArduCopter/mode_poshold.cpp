@@ -92,7 +92,7 @@ void ModePosHold::run()
     AP_Mount *mount = AP::mount();
     float target_yaw_rate;
     if ((mount != nullptr) && (mount->mount_yaw_follow_mode == AP_Mount::vehicle_yaw_follows_gimbal)) {
-        target_yaw_rate = mount->get_yaw_rate();
+        target_yaw_rate = mount->get_follow_yaw_rate();
     }
     else {
         target_yaw_rate = get_pilot_desired_yaw_rate(channel_yaw->get_control_in());
