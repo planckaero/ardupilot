@@ -134,6 +134,14 @@ public:
 
     float mount_scale_with_zoom;
 
+    float yaw_encoder_readback;
+    enum MountYawFollowMode {
+        gimbal_yaw_follows_vehicle = 0,
+        vehicle_yaw_follows_gimbal = 1
+    };
+    MountYawFollowMode mount_yaw_follow_mode;
+    float get_yaw_rate();
+
 protected:
 
     static AP_Mount *_singleton;

@@ -18,6 +18,7 @@ bool ModeStabilize_Heli::init(bool ignore_checks)
 // should be called at 100hz or more
 void ModeStabilize_Heli::run()
 {
+    AP_mount *mount = AP::mount();
     float target_roll, target_pitch;
     float target_yaw_rate;
     float pilot_throttle_scaled;
@@ -28,8 +29,14 @@ void ModeStabilize_Heli::run()
     // convert pilot input to lean angles
     get_pilot_desired_lean_angles(target_roll, target_pitch, copter.aparm.angle_max, copter.aparm.angle_max);
 
-    // get pilot's desired yaw rate
-    target_yaw_rate = get_pilot_desired_yaw_rate(channel_yaw->get_control_in());
+    // get pilot's desired yaw rate, or let the gimbal steer the vehicle
+    if ((mount != nullptr) && (mount->mount_yaw_follow_mode == AP_Mount::vehicle_yaw_follows_gimbal)) {
+        target_yaw_rate = mount->get_yaw_rate();
+    }
+    else {
+        target_yaw_rate = get_pilot_desired_yaw_rate(channel_yaw->get_control_in());
+    }
+
 
     // get pilot's desired throttle
     pilot_throttle_scaled = copter.input_manager.get_pilot_desired_collective(channel_throttle->get_control_in());

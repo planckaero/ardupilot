@@ -88,8 +88,15 @@ void ModePosHold::run()
     float target_roll, target_pitch;
     get_pilot_desired_lean_angles(target_roll, target_pitch, copter.aparm.angle_max, attitude_control->get_althold_lean_angle_max());
 
-    // get pilot's desired yaw rate
-    float target_yaw_rate = get_pilot_desired_yaw_rate(channel_yaw->get_control_in());
+    // get pilot's desired yaw rate, or let the gimbal steer the vehicle
+    AP_Mount *mount = AP::mount();
+    float target_yaw_rate;
+    if ((mount != nullptr) && (mount->mount_yaw_follow_mode == AP_Mount::vehicle_yaw_follows_gimbal)) {
+        target_yaw_rate = mount->get_yaw_rate();
+    }
+    else {
+        target_yaw_rate = get_pilot_desired_yaw_rate(channel_yaw->get_control_in());
+    }
 
     // get pilot desired climb rate (for alt-hold mode and take-off)
     float target_climb_rate = get_pilot_desired_climb_rate(channel_throttle->get_control_in());
