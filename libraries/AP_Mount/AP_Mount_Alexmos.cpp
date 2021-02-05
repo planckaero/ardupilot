@@ -42,29 +42,6 @@ void AP_Mount_Alexmos::update()
         case MAV_MOUNT_MODE_MAVLINK_TARGETING:
         {
 #define GIMBAL_YAW_SCALE (1.0f/20.0f)
-            /*
-#define VEHICLE_YAW_SCALE 0.1f
-            if (AP_Mount::mount_yaw_follow_mode == AP_Mount::vehicle_yaw_follows_gimbal)
-            {
-                // assume gimbal angles are set by by a MOUNT_CONTROL message from GCS
-                // move copter's YAW in same direction as gimbal, to keep the payload centered
-                int8_t direction = 0;
-                bool relative_angle = true;
-                if (_current_angle.z < 0.0f) {
-                    direction = -1;
-                    _current_angle.z = -_current_angle.z;
-                }
-                else {
-                    direction = 1;
-                }
-                float angle_deg = VEHICLE_YAW_SCALE * _current_angle.z;
-                copter.flightmode->auto_yaw.set_fixed_yaw(
-                    angle_deg,
-                    0.0f, // use default rate
-                    direction,
-                    relative_angle);
-            }
-            */
             AP_Mount *mount = AP::mount();
             if (mount->mount_yaw_follow_mode == AP_Mount::gimbal_yaw_follows_vehicle)
             {
@@ -197,7 +174,10 @@ void AP_Mount_Alexmos::control_axis(const Vector3f& angle, bool target_in_degree
     alexmos_parameters outgoing_buffer;
     outgoing_buffer.angle_speed.mode_roll = get_control_mode(_state._roll_input_mode);
     outgoing_buffer.angle_speed.mode_pitch = get_control_mode(_state._pitch_input_mode);
-    outgoing_buffer.angle_speed.mode_yaw = get_control_mode(_state._yaw_input_mode);
+    // Always setting the yaw mode to be speed rather than angles, so the current mavlinkVSM will work as is.
+    // The pilot view button won't center the mount yaw until we update the mavlinkVSM and set the mode_yaw
+    // back to be under GCS control via the MAV_CMD_DO_MOUNT_CONFIGURE command
+    outgoing_buffer.angle_speed.mode_yaw = AP_MOUNT_ALEXMOS_MODE_SPEED;
     outgoing_buffer.angle_speed.speed_roll = DEGREE_PER_SEC_TO_VALUE(target_deg.x);
     outgoing_buffer.angle_speed.angle_roll = DEGREE_TO_VALUE(target_deg.x);
     outgoing_buffer.angle_speed.speed_pitch = DEGREE_PER_SEC_TO_VALUE(target_deg.y);
