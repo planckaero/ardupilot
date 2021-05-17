@@ -104,6 +104,7 @@ public:
      */
     struct MultiCopter {
         AP_Int16 angle_max;
+        AP_Int16 planck_angle_max;
     };
 
 protected:

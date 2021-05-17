@@ -368,6 +368,29 @@ const AP_Param::Info Copter::var_info[] = {
     // @User: Advanced
     ASCALAR(angle_max, "ANGLE_MAX",                 DEFAULT_ANGLE_MAX),
 
+    // @Param: PLANCK_ANGLE_MAX
+    // @DisplayName: Planck Angle Max
+    // @Description: Maximum lean angle in planck flight modes
+    // @Units: cdeg
+    // @Range: 1000 8000
+    // @User: Advanced
+    ASCALAR(planck_angle_max, "PLANCK_ANGLE_MAX",                 DEFAULT_PLANCK_ANGLE_MAX),
+
+    // @Param: PLANCK_ANGLE_TO
+    // @DisplayName: Planck Angle Timeout
+    // @Description: Time above PLANCK_ANGLE_MAX before triggering failsafe
+    // @Units: milliseconds
+    // @Range: 0 60000
+    // @User: Advanced
+    GSCALAR(planck_angle_fs_to, "PLANCK_ANG_FS_TO",                 FS_LEAN_TIMEOUT_MS),
+
+    // @Param: FS_ANGLE_ENABLE
+    // @DisplayName: Planck Angle Failsafe Enable
+    // @Description: Controls whether failsafe will be invoked (and what action to take) when lean angle is higher than PLANCK_ANGLE_MAX for long enough. This failsafe is only active when in Planck Track, Planck RTB, or Planck Land.
+    // @Values: 0:Disabled,1: Enabled always Planck Track or Planck land, 2:Enabled Only Warn
+    // @User: Standard
+    GSCALAR(failsafe_planck_angle, "FS_ANGLE_ENABLE", FS_PLANCK_ANGLE_DISABLED),
+
     // @Param: PHLD_BRAKE_RATE
     // @DisplayName: PosHold braking rate
     // @Description: PosHold flight mode's rotation rate during braking in deg/sec
@@ -1082,7 +1105,6 @@ const AP_Param::ConversionInfo conversion_table[] = {
     { Parameters::k_param_arming_check_old,   0,      AP_PARAM_INT8,  "ARMING_CHECK" },
     // battery
     { Parameters::k_param_fs_batt_voltage,    0,      AP_PARAM_FLOAT,  "BATT_LOW_VOLT" },
-    { Parameters::k_param_fs_batt_mah,        0,      AP_PARAM_FLOAT,  "BATT_LOW_MAH" },
     { Parameters::k_param_failsafe_battery_enabled,0, AP_PARAM_INT8,   "BATT_FS_LOW_ACT" },
 
     { Parameters::Parameters::k_param_ch7_option_old,   0,      AP_PARAM_INT8,  "RC7_OPTION" },

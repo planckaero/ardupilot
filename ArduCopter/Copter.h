@@ -415,6 +415,7 @@ private:
         uint32_t last_heartbeat_ms;      // the time when the last HEARTBEAT message arrived from a GCS - used for triggering gcs failsafe
         uint32_t terrain_first_failure_ms;  // the first time terrain data access failed - used to calculate the duration of the failure
         uint32_t terrain_last_failure_ms;   // the most recent time terrain data access failed
+        uint32_t lean_high_time_ms;   // time of rising edge for high lean
 
         int8_t radio_counter;            // number of iterations with throttle below throttle_fs_value
 
@@ -423,6 +424,7 @@ private:
         uint8_t ekf                 : 1; // true if ekf failsafe has occurred
         uint8_t terrain             : 1; // true if the missing terrain data failsafe has occurred
         uint8_t adsb                : 1; // true if an adsb related failsafe has occurred
+        uint8_t lean                : 1; // true if a lean-angle failsafe has occurred
     } failsafe;
 
     bool any_failsafe_triggered() const {
@@ -747,6 +749,8 @@ private:
     void failsafe_terrain_set_status(bool data_ok);
     void failsafe_terrain_on_event();
     void gpsglitch_check();
+    void failsafe_lean_check();
+    void failsafe_lean_on_event();
     void set_mode_RTL_or_land_with_pause(ModeReason reason);
     void set_mode_SmartRTL_or_RTL(ModeReason reason);
     void set_mode_SmartRTL_or_land_with_pause(ModeReason reason);

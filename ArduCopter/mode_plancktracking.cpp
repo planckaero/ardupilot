@@ -193,6 +193,15 @@ void ModePlanckTracking::run() {
       }
     }
 
+    if (g.failsafe_planck_angle != FS_PLANCK_ANGLE_DISABLED){
+        copter.failsafe_lean_check();
+    }
+    else if(copter.failsafe.lean > 0){
+        copter.failsafe.lean = false;
+        copter.failsafe.lean_high_time_ms = 0;
+        AP::logger().Write_Error(LogErrorSubsystem::FAILSAFE_LEAN, LogErrorCode::ERROR_RESOLVED);
+    }
+
     //Run the guided mode controller
     ModeGuided::run(true); //use high-jerk
 }

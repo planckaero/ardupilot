@@ -265,6 +265,9 @@ public:
     // Return tilt angle in degrees
     float lean_angle() const { return degrees(_thrust_angle); }
 
+    // Return configured planck tilt angle limit in centidegrees
+    float planck_lean_angle_max() const { return _aparm.planck_angle_max; }
+
     // Proportional controller with piecewise sqrt sections to constrain second derivative
     static float sqrt_controller(float error, float p, float second_ord_lim, float dt);
 

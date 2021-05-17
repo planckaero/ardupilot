@@ -171,6 +171,12 @@
  #define FS_TERRAIN_TIMEOUT_MS          5000     // 5 seconds of missing terrain data will trigger failsafe (RTL)
 #endif
 
+// high lean angle failsafe
+#ifndef FS_LEAN_TIMEOUT_MS
+ #define FS_LEAN_TIMEOUT_MS          5000     // 5 seconds of high lean angle (PLANCKLAND)
+#endif
+
+
 #ifndef PREARM_DISPLAY_PERIOD
 # define PREARM_DISPLAY_PERIOD 30
 #endif
@@ -593,6 +599,10 @@
 #endif
 #ifndef ANGLE_RATE_MAX
  # define ANGLE_RATE_MAX            18000           // default maximum rotation rate in roll/pitch axis requested by angle controller used in stabilize, loiter, rtl, auto flight modes
+#endif
+
+#ifndef DEFAULT_PLANCK_ANGLE_MAX
+ # define DEFAULT_PLANCK_ANGLE_MAX         1200            // PLANCK_ANGLE_MAX parameters default value
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
