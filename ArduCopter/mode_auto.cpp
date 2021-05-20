@@ -467,7 +467,8 @@ void ModeAuto::planck_findandland_start(const uint32_t min_alt_cm)
 {
     _mode = Auto_PlanckFindAndLand;
     //Save the current altitude and reset any timers
-    nav_planck_findandland.timed_out = false;
+    nav_planck_findandland.complete = false;
+    nav_planck_findandland.disarm_commanded = false;
     nav_planck_findandland.wait_start_timestamp = 0;
     nav_planck_findandland.minimum_altitude_cm = min_alt_cm;
 
@@ -475,9 +476,6 @@ void ModeAuto::planck_findandland_start(const uint32_t min_alt_cm)
     if(!copter.current_loc.get_alt_cm(Location::AltFrame::ABOVE_HOME, nav_planck_findandland.initial_altitude_cm)) {
             // ignore failure
     }
-
-    //reset the disarmed check
-    _disarm_commanded = false;
 }
 
 // start_command - this function will be called when the ap_mission lib wishes to start a new command
@@ -1274,7 +1272,15 @@ void ModeAuto::planck_findandland_run()
             break;
 
         case PlanckFindAndLand_PlanckLand:
-            copter.mode_planckrtb.run();
+            //Check for motorkill commands from ACE
+            if(nav_planck_findandland.disarm_commanded) {
+                copter.planck_interface.stop_commanding();
+                make_safe_spool_down();
+                gcs().send_text(MAV_SEVERITY_INFO, "Planck: Landing complete");
+                nav_planck_findandland.complete = true;
+            } else {
+              copter.mode_planckrtb.run();
+            }
             return;
 
         case PlanckFindAndLand_AscendAndWait:
@@ -1286,7 +1292,7 @@ void ModeAuto::planck_findandland_run()
             if((nav_planck_findandland.wait_start_timestamp > 0) &&
                (AP_HAL::millis() - nav_planck_findandland.wait_start_timestamp) > 10E3) {  //10s
                 nav_planck_findandland.wait_start_timestamp = 0;
-                nav_planck_findandland.timed_out = true;
+                nav_planck_findandland.complete = true;
                 gcs().send_text(MAV_SEVERITY_INFO, "Planck: Timed out at high altitude, resuming mission");
             }
             break;
@@ -2096,7 +2102,7 @@ bool ModeAuto::verify_planck_wingman()
 
 bool ModeAuto::verify_planck_findandland()
 {
-    return (_disarm_commanded || verify_planck_rtb() || nav_planck_findandland.timed_out);
+    return nav_planck_findandland.complete;
 }
 
 /********************************************************************************/

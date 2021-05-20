@@ -384,7 +384,7 @@ public:
         FUNCTOR_BIND_MEMBER(&ModeAuto::exit_mission, void)};
 
     // Indicate that ACE sent a motorkill command (landed)
-    void notify_findandland_disarm() { _disarm_commanded = true; };
+    void notify_findandland_disarm() { nav_planck_findandland.disarm_commanded = true; };
 
 protected:
 
@@ -526,10 +526,9 @@ private:
         int32_t minimum_altitude_cm;
         int32_t initial_altitude_cm;
         uint32_t wait_start_timestamp = 0; // milliseconds
-        bool timed_out = false;
+        bool disarm_commanded = false;
+        bool complete = false;
     } nav_planck_findandland;
-
-    bool _disarm_commanded = false;
 
     bool _planck_used; //If planck is being used currently
 };

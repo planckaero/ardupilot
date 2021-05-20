@@ -1347,7 +1347,6 @@ MAV_RESULT GCS_MAVLINK_Copter::handle_flight_termination(const mavlink_command_l
     // In the event that ACE sends a motorkill, tell ACE to stop commanding but
     // don't actually shut off the motors.
     if(copter.flightmode == &copter.mode_auto && copter.mode_auto.mode() == Auto_PlanckFindAndLand) {
-        copter.planck_interface.stop_commanding();
         copter.mode_auto.notify_findandland_disarm();
         return MAV_RESULT_ACCEPTED;
     }
