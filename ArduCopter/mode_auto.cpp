@@ -475,6 +475,9 @@ void ModeAuto::planck_findandland_start(const uint32_t min_alt_cm)
     if(!copter.current_loc.get_alt_cm(Location::AltFrame::ABOVE_HOME, nav_planck_findandland.initial_altitude_cm)) {
             // ignore failure
     }
+
+    //reset the disarmed check
+    _disarm_commanded = false;
 }
 
 // start_command - this function will be called when the ap_mission lib wishes to start a new command
@@ -2093,7 +2096,7 @@ bool ModeAuto::verify_planck_wingman()
 
 bool ModeAuto::verify_planck_findandland()
 {
-    return (verify_planck_rtb() || nav_planck_findandland.timed_out);
+    return (_disarm_commanded || verify_planck_rtb() || nav_planck_findandland.timed_out);
 }
 
 /********************************************************************************/

@@ -383,6 +383,9 @@ public:
         FUNCTOR_BIND_MEMBER(&ModeAuto::verify_command, bool, const AP_Mission::Mission_Command &),
         FUNCTOR_BIND_MEMBER(&ModeAuto::exit_mission, void)};
 
+    // Indicate that ACE sent a motorkill command (landed)
+    void notify_findandland_disarm() { _disarm_commanded = true; };
+
 protected:
 
     const char *name() const override { return "AUTO"; }
@@ -526,6 +529,7 @@ private:
         bool timed_out = false;
     } nav_planck_findandland;
 
+    bool _disarm_commanded = false;
 
     bool _planck_used; //If planck is being used currently
 };

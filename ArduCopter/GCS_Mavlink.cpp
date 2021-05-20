@@ -1344,6 +1344,14 @@ void Copter::mavlink_delay_cb()
 MAV_RESULT GCS_MAVLINK_Copter::handle_flight_termination(const mavlink_command_long_t &packet) {
     MAV_RESULT result = MAV_RESULT_FAILED;
 
+    // In the event that ACE sends a motorkill, tell ACE to stop commanding but
+    // don't actually shut off the motors.
+    if(copter.flightmode == &copter.mode_auto && copter.mode_auto.mode() == Auto_PlanckFindAndLand) {
+        copter.planck_interface.stop_commanding();
+        copter.mode_auto.notify_findandland_disarm();
+        return MAV_RESULT_ACCEPTED;
+    }
+
 #if ADVANCED_FAILSAFE == ENABLED
     if (GCS_MAVLINK::handle_flight_termination(packet) != MAV_RESULT_ACCEPTED) {
 #endif
