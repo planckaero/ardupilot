@@ -165,6 +165,8 @@ public:
     HAL_Semaphore sf_window_mutex;
 #endif
 
+    void set_nav_lights(void);
+
 private:
 
     static AP_Notify *_singleton;
