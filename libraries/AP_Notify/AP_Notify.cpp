@@ -202,6 +202,23 @@ void AP_Notify::add_backend_helper(NotifyDevice *backend)
 // add notify backends to _devices array
 void AP_Notify::add_backends(void)
 {
+
+  AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev1 =  std::move(hal.i2c_mgr->get_device(0, 0x51));
+  dev1->write_register(0x0a,127);
+  dev1->write_register(0x0b,2);
+
+  AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev2 =  std::move(hal.i2c_mgr->get_device(0, 0x52));
+  dev2->write_register(0x0a,127);
+  dev2->write_register(0x0b,2);
+
+  AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev3 =  std::move(hal.i2c_mgr->get_device(0, 0x53));
+  dev3->write_register(0x0a,127);
+  dev3->write_register(0x0b,2);
+
+  AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev4 =  std::move(hal.i2c_mgr->get_device(0, 0x54));
+  dev4->write_register(0x0a,127);
+  dev4->write_register(0x0b,2);
+
     if (_num_devices != 0) {
         return;
     }
@@ -277,22 +294,6 @@ void AP_Notify::add_backends(void)
 
         }
     }
-
-    AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev1 =  std::move(hal.i2c_mgr->get_device(0, 0x51));
-    dev1->write_register(0x0a,127);
-    dev1->write_register(0x0b,2);
-
-    AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev2 =  hal.i2c_mgr->get_device(0, 0x52);
-    dev2->write_register(0x0a,127);
-    dev2->write_register(0x0b,2);
-
-    AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev3 =  hal.i2c_mgr->get_device(0, 0x53);
-    dev3->write_register(0x0a,127);
-    dev3->write_register(0x0b,2);
-
-    AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev4 =  hal.i2c_mgr->get_device(0, 0x54);
-    dev4->write_register(0x0a,127);
-    dev4->write_register(0x0b,2);
 
     // Always try and add a display backend
     ADD_BACKEND(new Display());
