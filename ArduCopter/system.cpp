@@ -83,7 +83,6 @@ void Copter::init_ardupilot()
 
     // Init RSSI
     rssi.init();
-
     barometer.init();
 
     // setup telem slots with serial ports
@@ -255,11 +254,8 @@ void Copter::init_ardupilot()
     if(g.planck_nav_lights_on)
     {
       notify.set_nav_lights();
-
       notify.set_nav_lights();
-
       notify.set_nav_lights();
-
       notify.set_nav_lights();
     }
 

@@ -272,7 +272,6 @@ void AP_Notify::set_nav_lights(void)
 // add notify backends to _devices array
 void AP_Notify::add_backends(void)
 {
-
     if (_num_devices != 0) {
         return;
     }

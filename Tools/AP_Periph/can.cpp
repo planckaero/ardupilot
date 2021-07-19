@@ -957,22 +957,6 @@ void AP_Periph_FW::can_start()
 
     // wait for dynamic node ID allocation
     can_wait_node_id();
-
-//    AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev1 =  std::move(hal.i2c_mgr->get_device(0, 0x51));
-//    dev1->write_register(0x0a,127);
-//    dev1->write_register(0x0b,2);
-
-//    AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev2 =  hal.i2c_mgr->get_device(0, 0x52);
-//    dev2->write_register(0x0a,127);
-//    dev2->write_register(0x0b,2);
-
-//    AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev3 =  hal.i2c_mgr->get_device(0, 0x53);
-//    dev3->write_register(0x0a,127);
-//    dev3->write_register(0x0b,2);
-
-//    AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev4 =  hal.i2c_mgr->get_device(0, 0x54);
-//    dev4->write_register(0x0a,127);
-//    dev4->write_register(0x0b,2);
 }
 
 
