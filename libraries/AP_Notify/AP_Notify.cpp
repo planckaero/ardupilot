@@ -205,15 +205,12 @@ bool AP_Notify::set_led(uint8_t device_address, bool on) {
   bool success = false;
   if(!dev->get_semaphore()->take(10)) {
     gcs().send_text(MAV_SEVERITY_CRITICAL, "Unable to set LED %i\n", device_address);
-//    goto complete;
   } else {
     success = dev->write_register(0x0A,0x40);
     success &= dev->write_register(0x0B, (uint8_t)on);
     dev->get_semaphore()->give();
   }
 
-complete:
-  //Delete the OwnPtr here?
   return success;
 }
 
