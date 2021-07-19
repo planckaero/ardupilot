@@ -251,12 +251,25 @@ void Copter::init_ardupilot()
         enable_motor_output();
     }
 
-    if(g.planck_nav_lights_on)
+    if(g.nav_lights_on)
     {
-      notify.set_nav_lights();
-      notify.set_nav_lights();
-      notify.set_nav_lights();
-      notify.set_nav_lights();
+      // For an unknown reason, the commands to turn on nav LEDS must be sent 4 times
+      bool success = false;
+      uint8_t num_attempts = 0;
+
+      while ((!success) && (num_attempts <= 5))
+      {
+        success = false;
+        for(int i_led=0;i_led<4;i_led++)
+        {
+          success = notify.set_led(0x51,1);
+          success &= notify.set_led(0x52,1);
+          success &= notify.set_led(0x53,1);
+          success &= notify.set_led(0x54,1);
+        }
+
+        num_attempts += 1;
+      }
     }
 
     // disable safety if requested

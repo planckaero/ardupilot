@@ -166,6 +166,7 @@ public:
 #endif
 
     void set_nav_lights(void);
+    bool set_led(uint8_t device_address, bool on);
 
 private:
 
