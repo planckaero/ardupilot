@@ -437,6 +437,13 @@ const AP_Param::Info Copter::var_info[] = {
     // @User: Advanced
     GSCALAR(planck_high_tension_throttle, "PLANCK_HT_THR", PLANCK_HT_THR),
 
+    // @Param: PLANCK_NAV_LED
+    // @DisplayName: Planck Nav Lights
+    // @Description: Enable motor LED lights
+    // @Values: 0:Disabled,1:enabled
+    // @User: Advanced
+    GSCALAR(planck_nav_lights_on,   "PLANCK_NAV_LED",     PLANCK_NAV_LED),
+
     // @Param: ACRO_RP_P
     // @DisplayName: Acro Roll and Pitch P gain
     // @Description: Converts pilot roll and pitch into a desired rate of rotation in ACRO and SPORT mode.  Higher values mean faster rate of rotation.

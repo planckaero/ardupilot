@@ -252,7 +252,17 @@ void Copter::init_ardupilot()
         enable_motor_output();
     }
 
-    notify.set_nav_lights();
+    if(g.planck_nav_lights_on)
+    {
+      notify.set_nav_lights();
+
+      notify.set_nav_lights();
+
+      notify.set_nav_lights();
+
+      notify.set_nav_lights();
+    }
+
     // disable safety if requested
     BoardConfig.init_safety();
 

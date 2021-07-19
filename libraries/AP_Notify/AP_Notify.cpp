@@ -201,23 +201,73 @@ void AP_Notify::add_backend_helper(NotifyDevice *backend)
 
 void AP_Notify::set_nav_lights(void)
 {
-  gcs().send_text(MAV_SEVERITY_CRITICAL, "sending nav light comands");
-  AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev1 =  std::move(hal.i2c_mgr->get_device(0, 0x51));
-  dev1->write_register(0x0a,127);
-  dev1->write_register(0x0b,2);
+  AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev1 =  std::move(hal.i2c_mgr->get_device(0, 0x51,100000, true, 20));
 
-  AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev2 =  std::move(hal.i2c_mgr->get_device(0, 0x52));
-  dev2->write_register(0x0a,127);
-  dev2->write_register(0x0b,2);
+  bool dev1sem = false;
+  bool dev2sem = false;
+  bool dev3sem = false;
+  bool dev4sem = false;
 
-  AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev3 =  std::move(hal.i2c_mgr->get_device(0, 0x53));
-  dev3->write_register(0x0a,127);
-  dev3->write_register(0x0b,2);
+  if(!dev1->get_semaphore()->take(10))
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "dev1 sem take fail");
+  else{
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "dev1 sem take good");
+    dev1sem = true;
+  }
 
-  AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev4 =  std::move(hal.i2c_mgr->get_device(0, 0x54));
-  dev4->write_register(0x0a,127);
-  dev4->write_register(0x0b,2);
-  gcs().send_text(MAV_SEVERITY_CRITICAL, "done sending nav light comands");
+  dev1->write_register(0x0a,0x40);
+  dev1->write_register(0x0B,0x01);
+
+  if(dev1sem)
+    dev1->get_semaphore()->give();
+
+
+  AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev2 =  std::move(hal.i2c_mgr->get_device(0, 0x52,100000, true, 20));
+
+  if(!dev2->get_semaphore()->take(10))
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "dev2 sem take fail");
+  else{
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "dev2 sem take good");
+    dev2sem = true;
+
+  }
+
+  dev2->write_register(0x0A,0x40);
+  dev2->write_register(0x0B,0x01);
+
+  if(dev2sem)
+    dev2->get_semaphore()->give();
+
+  AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev3 =  std::move(hal.i2c_mgr->get_device(0, 0x53,100000, true, 20));
+
+  if(!dev3->get_semaphore()->take(10))
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "dev3 sem take fail");
+  else{
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "dev3 sem take good");
+    dev3sem = true;
+  }
+
+  dev3->write_register(0x0A,0x40);
+  dev3->write_register(0x0B,0x01);
+
+  if(dev3sem)
+    dev3->get_semaphore()->give();
+
+  AP_HAL::OwnPtr<AP_HAL::I2CDevice> dev4 =  std::move(hal.i2c_mgr->get_device(0, 0x54,100000, true, 20));
+
+  if(!dev4->get_semaphore()->take(10))
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "dev4 sem take fail");
+  else{
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "dev4 sem take good");
+    dev4sem = true;
+  }
+
+  dev4->write_register(0x0A,0x40);
+  dev4->write_register(0x0B,0x01);
+
+  if(dev4sem)
+    dev4->get_semaphore()->give();
+
 }
 // add notify backends to _devices array
 void AP_Notify::add_backends(void)
