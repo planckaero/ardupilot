@@ -28,12 +28,36 @@ bool ModePlanckTracking::init(bool ignore_checks){
           copter.pos_control->get_max_speed_down()/100.,
           rate_xy_cms/100.);
     }
+    //If the aircraft is on the ground, reset command request info on ModePlanckTracking init
+    else
+    {
+      copter.planck_interface.reset_cmd_req_info();
+    }
 
     //Initialize the GUIDED methods
     return init_without_RTB_request(ignore_checks);
 }
 
 void ModePlanckTracking::run() {
+
+    // If (waiting for a takoff request ACK from ACE or it hasn't sent a takeoff request))
+    // OR (ACE has accepted a takeoff request but hasn't sent any commands yet and it's on the ground), do nothing
+    if((copter.planck_interface.waiting_for_ack() == PLANCK_CMD_REQ_TAKEOFF || copter.planck_interface.get_last_cmd_req_t_ms() == 0)
+       || ((copter.planck_interface.was_last_request_accepted() == PLANCK_CMD_REQ_TAKEOFF) && ((AP_HAL::millis() - copter.planck_interface.get_cmd_timestamp()) > 100)  && copter.ap.land_complete)) {
+        return;
+    }
+    // If takeoff was rejected or not accepted quickly, and we're on the groud, armed, and idling, then disarm
+    // NOTE: in mode_auto, copter.ap.land_complete is set to false right away, so can't use it to verify being on ground
+    else if (copter.planck_interface.was_last_request_rejected() == PLANCK_CMD_REQ_TAKEOFF
+             && (copter.ap.land_complete || copter.flightmode == &copter.mode_auto)
+             && motors->get_spool_state() <= AP_Motors::SpoolState::GROUND_IDLE) {
+        if(!_takeoff_rejected_disarm || copter.arming.is_armed()) {
+            copter.gcs().send_text(MAV_SEVERITY_CRITICAL, "ACE rejected takeoff: Disarming");
+            copter.arming.disarm();
+            _takeoff_rejected_disarm = true;
+        }
+        return;
+    }
 
     //If there is new command data, send it to Guided
     if(copter.planck_interface.new_command_available()) {
@@ -203,6 +227,7 @@ bool ModePlanckTracking::do_user_takeoff_start(float final_alt_above_home)
     if(!copter.planck_interface.ready_for_takeoff())
       return false;
 
+    _takeoff_rejected_disarm = false;
     // Tell planck to start commanding
     copter.planck_interface.request_takeoff(final_alt_above_home/100.);
 

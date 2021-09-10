@@ -548,7 +548,12 @@ void GCS_MAVLINK_Copter::handle_rc_channels_override(const mavlink_message_t &ms
 void GCS_MAVLINK_Copter::handle_command_ack(const mavlink_message_t &msg)
 {
     copter.command_ack_counter++;
-    GCS_MAVLINK::handle_command_ack(msg);
+
+    if ((msg.sysid == copter.g.sysid_this_mav) && (msg.compid == PLANCK_CTRL_COMP_ID)) {
+        copter.planck_interface.handle_planck_ack(msg);
+    } else {
+        GCS_MAVLINK::handle_command_ack(msg);
+    }
 }
 
 MAV_RESULT GCS_MAVLINK_Copter::_handle_command_preflight_calibration(const mavlink_command_long_t &packet)

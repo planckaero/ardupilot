@@ -115,6 +115,7 @@ void AC_Planck::handle_planck_mavlink_msg(const mavlink_channel_t &chan, const m
 
         //This is a new command
         _cmd.is_new = true;
+        _cmd.timestamp_ms = AP_HAL::millis();
         break;
     }
 
@@ -133,6 +134,8 @@ void AC_Planck::request_takeoff(const float alt)
     PLANCK_CMD_REQ_TAKEOFF,//uint8_t type
     alt,                   //float param1
     0,0,0,0,0);
+
+  _sent_cmd_req(PLANCK_CMD_REQ_TAKEOFF);
 }
 
 void AC_Planck::request_alt_change(const float alt, const float rate_up_cms, const float rate_down_cms)
@@ -152,6 +155,8 @@ void AC_Planck::request_alt_change(const float alt, const float rate_up_cms, con
     alt,              //param4
     0,                //param5
     *reinterpret_cast<float*>(&(muxed_rates)));           //param6
+
+  _sent_cmd_req(PLANCK_CMD_REQ_MOVE_TARGET);
 }
 
 void AC_Planck::request_rtb(const float alt, const float rate_up, const float rate_down, const float rate_xy)
@@ -167,6 +172,8 @@ void AC_Planck::request_rtb(const float alt, const float rate_up, const float ra
     rate_down,             //float param3
     rate_xy,               //float param4
     0,0);
+
+  _sent_cmd_req(PLANCK_CMD_REQ_RTB);
 }
 
 void AC_Planck::request_land(const float descent_rate)
@@ -179,6 +186,8 @@ void AC_Planck::request_land(const float descent_rate)
     PLANCK_CMD_REQ_LAND,   //uint8_t type
     descent_rate,          //float param1
     0,0,0,0,0);
+
+  _sent_cmd_req(PLANCK_CMD_REQ_LAND);
 }
 
 //Move the current tracking target, either to an absolute offset or by a rate
@@ -203,6 +212,7 @@ void AC_Planck::request_move_target(const Vector3f offset_cmd_NED, const bool is
   //If the target has moved, the _was_at_location flag must go false until we
   //hear otherwise from planck
   _was_at_location = false;
+  _sent_cmd_req(PLANCK_CMD_REQ_MOVE_TARGET);
 }
 
 void AC_Planck::stop_commanding(void)
@@ -213,6 +223,8 @@ void AC_Planck::stop_commanding(void)
     PLANCK_CTRL_COMP_ID,   //uint8_t target_component,
     PLANCK_CMD_REQ_STOP,   //uint8_t type
     0,0,0,0,0,0);
+
+  _sent_cmd_req(PLANCK_CMD_REQ_STOP);
 }
 
 //Get an accel, yaw, z_rate command
@@ -268,6 +280,45 @@ bool AC_Planck::get_posvel_cmd(Location &loc, Vector3f &vel_cms, float &yaw_cd, 
   return true;
 }
 
+void AC_Planck::handle_planck_ack(const mavlink_message_t &msg)
+{
+    mavlink_command_ack_t ack;
+    mavlink_msg_command_ack_decode(&msg, &ack);
+
+    if(ack.command == _cmd_req_info.last_cmd_req_id && _cmd_req_info.last_cmd_req_t_ms > 0) {
+      _cmd_req_info.ack_status = (ack.result == 1 ? PLANCK_ACK : PLANCK_NACK);
+    }
+}
+
+//Returns ID of the last cmd request if the last command req was actively NACKd or timed out, otherwise returns -1
+int AC_Planck::was_last_request_rejected() {
+  if (_cmd_req_info.ack_status == PLANCK_WAITING_FOR_ACK && ((AP_HAL::millis() - _cmd_req_info.last_cmd_req_t_ms) > ACK_WAIT_TIME_MS)) {
+    _set_ack_status(PLANCK_NACK);
+  }
+  if (_cmd_req_info.ack_status == PLANCK_NACK) {
+    return _cmd_req_info.last_cmd_req_id;
+  }
+  return -1;
+}
+
+//Returns ID of the last cmd request if the last command req was accepted, otherwise returns -1
+int AC_Planck::was_last_request_accepted() {
+  if (_cmd_req_info.ack_status == PLANCK_ACK) {
+    return _cmd_req_info.last_cmd_req_id;
+  }
+  return -1;
+}
+
+//If waiting for an ack, it returns the the last cmd req set, otherwise returns -1
+int AC_Planck::waiting_for_ack() {
+  if (_cmd_req_info.ack_status == PLANCK_WAITING_FOR_ACK) {
+    if((AP_HAL::millis() - _cmd_req_info.last_cmd_req_t_ms) <= ACK_WAIT_TIME_MS) {
+        return _cmd_req_info.last_cmd_req_id;
+    }
+  }
+  return -1;
+}
+
 uint32_t AC_Planck::mux_rates(float rate_up,  float rate_down)
 {
   if (rate_down<0)
@@ -283,3 +334,10 @@ uint32_t AC_Planck::mux_rates(float rate_up,  float rate_down)
   muxed_rates = (muxed_rates & 0x7FFF7FFF) | 0x00008000;
   return muxed_rates;
 };
+
+void AC_Planck::reset_cmd_req_info()
+{
+  _cmd_req_info.last_cmd_req_t_ms = 0;
+  _cmd_req_info.ack_status = NOT_WAITING;
+  _cmd_req_info.last_cmd_req_id = -1;
+}

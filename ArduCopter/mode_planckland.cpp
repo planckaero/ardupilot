@@ -10,12 +10,15 @@ bool ModePlanckLand::init(bool ignore_checks){
       return false;
     }
 
-    ModeGuided::set_angle(Quaternion(),0,true,0);
-    if(ModeGuidedNoGPS::init(ignore_checks)) {
-        float land_velocity = abs((copter.g.land_speed > 0 ?
-            copter.g.land_speed : copter.pos_control->get_max_speed_down()))/100.;
-      copter.planck_interface.request_land(land_velocity);
-      return true;
+    // don't request land or init ModeGuidedNoGPS if waiting for a land req ack
+    if (copter.planck_interface.waiting_for_ack() != PLANCK_CMD_REQ_LAND) {
+      ModeGuided::set_angle(Quaternion(),0,true,0);
+      if (ModeGuidedNoGPS::init(ignore_checks)) {
+          float land_velocity = abs((copter.g.land_speed > 0 ?
+              copter.g.land_speed : copter.pos_control->get_max_speed_down()))/100.;
+        copter.planck_interface.request_land(land_velocity);
+        return true;
+      }
     }
     return false;
 }
