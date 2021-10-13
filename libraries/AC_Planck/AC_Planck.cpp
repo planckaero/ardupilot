@@ -150,6 +150,7 @@ void AC_Planck::handle_planck_mavlink_msg(const mavlink_channel_t &chan, const m
       mavlink_msg_planck_deck_tether_status_decode(mav_msg, &ts);
       _tether_status.timestamp_ms = AP_HAL::millis();
       _tether_status.cable_out_m = ts.CABLE_OUT * 0.3048; //feet to meters
+      _tether_status.spool_status = ts.SPOOL_STATUS;
 
       bool high_tension =  (ts.SPOOL_STATUS == PLANCK_DECK_SPOOL_LOCKED) && (ts.CABLE_TENSION > 75);
       bool entered_high_tension = high_tension && !_tether_status.high_tension;
