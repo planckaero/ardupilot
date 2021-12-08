@@ -296,7 +296,7 @@ void Copter::failsafe_tether_status_check()
             failsafe_tether_on_event();
         } else {
             AP::logger().Write_Error(LogErrorSubsystem::FAILSAFE_TETHER, LogErrorCode::ERROR_RESOLVED);
-            failsafe.terrain = false;
+            failsafe.tether = false;
         }
     }
 }
@@ -311,7 +311,6 @@ void Copter::failsafe_tether_on_event()
 
     if((copter.flightmode != &copter.mode_planckland) && (copter.flightmode != &copter.mode_planckrtb))
     {
-        //set_mode_RTL_or_land_with_pause(ModeReason::TETHER_FAILSAFE);
         set_mode_planck_RTB_or_planck_land(ModeReason::TETHER_FAILSAFE);
     }
 }
