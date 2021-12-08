@@ -90,6 +90,9 @@ public:
   //Override any commands from ACE with zero-attitude commands
   void override_with_zero_att_cmd();
 
+  //Return the current spool status of the BV
+  uint8_t get_spool_status() { return _tether_status.spool_status; };
+
 private:
 
   struct

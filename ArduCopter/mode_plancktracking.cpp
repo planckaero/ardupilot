@@ -129,12 +129,6 @@ void ModePlanckTracking::run() {
             return;
         }
     }
-//    else if(copter.planck_interface.get_spool_status() == PLANCK_DECK_SPOOL_RETRIEVE)
-//    {
-//      if((copter.flightmode != &copter.mode_planckland) && (copter.flightmode != &copter.mode_planckrtb)) {
-//          copter.set_mode_planck_RTB_or_planck_land(ModeReason::TETHER_FAILSAFE);
-//      }
-//    }
 
     //If there is new command data, send it to Guided
     if(copter.planck_interface.new_command_available()) {

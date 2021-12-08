@@ -289,7 +289,7 @@ void Copter::failsafe_terrain_on_event()
 // check for tether fault
 void Copter::failsafe_tether_status_check()
 {
-    bool tether_trigger = copter.planck_interface.get_spool_status == PLANCK_DECK_SPOOL_RETRIEVE;
+    bool tether_trigger = copter.planck_interface.get_spool_status() == PLANCK_DECK_SPOOL_RETRIEVE;
 
     if (tether_trigger != failsafe.tether) {
         if (tether_trigger) {
