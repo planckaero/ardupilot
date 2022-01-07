@@ -42,6 +42,7 @@ void ModePlanckTracking::run() {
     //Check for tether high tension
     bool high_tension = copter.planck_interface.is_tether_high_tension() || copter.planck_interface.is_tether_timed_out();
     bool use_positive_throttle = high_tension;
+    float yaw_rate_cmd_cds = 0;
 
     // Don't use/set heading command from gimbal if tether is in high tension.
     if(!high_tension)
@@ -86,10 +87,17 @@ void ModePlanckTracking::run() {
                   0,
                   0);
           }
+          //We've got a new yaw rate command from the tablet
           else if(copter.flightmode->auto_yaw.mode() == AUTO_YAW_RATE)
           {
+            //Set the yaw rate command if using tablet rate commands (no gimbal pan)
+            //Note that the logic still requires auto yaw mode to be AUTO_YAW_FIXED
+            yaw_rate_cmd_cds = copter.flightmode->auto_yaw.rate_cds();
+
+            //call set_fixed_yaw() to set yaw mode to fixed, and update the time stamp so it doesn't time out
+            //the yaw angle command won't be used here, but set it to current yaw just in case
             copter.flightmode->auto_yaw.set_fixed_yaw(
-                  copter.flightmode->auto_yaw.rate_cds(),
+                  degrees(copter.ahrs.get_yaw()),
                   0.0f,
                   0,
                   0);
@@ -176,7 +184,7 @@ void ModePlanckTracking::run() {
                       && (copter.planck_interface.get_tag_pos().z > min_yaw_alt_cm)
                       && !high_tension)
               {
-                  yaw_cd = copter.flightmode->auto_yaw.yaw();
+                  yaw_cd = paylod_yaw_rate ? yaw_rate_cmd_cds : copter.flightmode->auto_yaw.yaw();
                   is_yaw_rate = paylod_yaw_rate;
               }
 
