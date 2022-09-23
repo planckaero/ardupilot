@@ -192,6 +192,11 @@ void ModePlanckTracking::run() {
             break;
       }
     }
+    // If ACE stopped sending commands, reset guided mode update times so guided timeout triggers immediately
+    else if(copter.planck_interface.command_timed_out())
+    {
+        copter.mode_guided.check_and_reset_update_times();
+    }
 
     //Run the guided mode controller
     ModeGuided::run(true); //use high-jerk

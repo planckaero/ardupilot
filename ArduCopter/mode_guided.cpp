@@ -788,4 +788,15 @@ float ModeGuided::crosstrack_error() const
     }
 }
 
+// set all update times to 0 if at least one has updated - can be used to trigger timeouts immediately
+void ModeGuided::check_and_reset_update_times()
+{
+  if((vel_update_time_ms > 0) || (posvel_update_time_ms > 0) || (guided_angle_state.update_time_ms > 0))
+  {
+    vel_update_time_ms = 0;
+    posvel_update_time_ms = 0;
+    guided_angle_state.update_time_ms = 0;
+  }
+}
+
 #endif

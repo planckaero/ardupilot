@@ -49,7 +49,8 @@ public:
 
   //command getters
   cmd_type get_cmd_type(void) { return _cmd.type; }
-  bool new_command_available() { return _cmd.is_new; };
+  bool new_command_available();
+  bool command_timed_out();
 
   //Get an accel, yaw, z_rate command
   bool get_accel_yaw_zrate_cmd(Vector3f &accel_cmss, float &yaw_cd, float &vz_cms, bool &is_yaw_rate);

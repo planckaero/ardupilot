@@ -814,6 +814,7 @@ public:
 
     void angle_control_start();
     void angle_control_run(bool high_jerk_z = false);
+    void check_and_reset_update_times();
 
 protected:
 
