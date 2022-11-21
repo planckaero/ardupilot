@@ -52,7 +52,7 @@ void ModePlanckTracking::run() {
       // so we add that offset to the current vehicle heading to obtain the desired absoute heading.
       // Note that the getter method "get_follow_yaw_rate()" is poorly named; it is not a rate,
       // it's the differene between vehicle and gimbal heading.
-      if(mount != nullptr) {
+      if(mount != nullptr && ((mount->get_last_mount_control_time_us() > 0) || (mount->get_last_payload_update_us > 0))) {
         if(mount->mount_yaw_follow_mode == AP_Mount::vehicle_yaw_follows_gimbal) {
 
           //only set new yaw command if payload data is recent (1/2 sec)
