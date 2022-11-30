@@ -2229,6 +2229,13 @@ void GCS_MAVLINK::send_planck_stateinfo()
     int32_t alt_above_terrain_cm = 0;
     ahrs.get_position(current_loc);
 
+    // Make sure we don't send bad GPS values
+    const AP_GPS &gps = AP::gps();
+    if (!gps.is_healthy()) {
+        current_loc.lng = 0;
+        current_loc.lat = 0;
+    }
+
     if(current_loc.initialised()) {
         if(!current_loc.get_alt_cm(Location::AltFrame::ABOVE_HOME, alt_above_home_cm))
         {
