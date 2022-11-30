@@ -120,7 +120,7 @@ void ModePlanckTracking::run() {
             copter.set_mode_planck_RTB_or_planck_land(ModeReason::GCS_FAILSAFE);
         }
 
-        if(!copter.planck_interface.check_for_high_tension_timeout()) { //High tension hasn't failed
+        if(!copter.planck_interface.check_for_high_tension_timeout(copter.g.planck_expected_tether_speed_cms)) { //High tension hasn't failed
             //While in high tension:
             // - If actively tracking the tag, continue to do so, but use pos throttle
             // - If not tracking the tag, but have GPS, command zero velocity but use pos throttle

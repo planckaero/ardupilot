@@ -437,6 +437,14 @@ const AP_Param::Info Copter::var_info[] = {
     // @User: Advanced
     GSCALAR(planck_high_tension_throttle, "PLANCK_HT_THR", PLANCK_HT_THR),
 
+    // @Param: planck_expected_tether_speed_cms
+    // @DisplayName: Planck High Tension Tether Speed
+    // @Description: Expected tether reel in rate during high tension
+    // @Units: cm/s
+    // @Range: 1 1000
+    // @User: Advanced
+    GSCALAR(planck_expected_tether_speed_cms, "PLANCK_HT_TETH_SPD", PLANCK_HT_TETH_SPD),
+
     // @Param: NAV_LEDS_ON
     // @DisplayName: Nav Lights On
     // @Description: Enable motor LED lights

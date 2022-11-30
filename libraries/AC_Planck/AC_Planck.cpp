@@ -361,7 +361,7 @@ uint32_t AC_Planck::mux_rates(float rate_up,  float rate_down)
   return muxed_rates;
 }
 
-bool AC_Planck::check_for_high_tension_timeout() {
+bool AC_Planck::check_for_high_tension_timeout(float ht_tether_spd) {
   //No failure if not flying
   if(AP_Motors::get_singleton()->get_spool_state() == AP_Motors::SpoolState::SHUT_DOWN) {
     return false;
@@ -382,7 +382,7 @@ bool AC_Planck::check_for_high_tension_timeout() {
   //The amount of time to wait for high tension to timeout is a function of
   //initial altitude when the high tension event ocurred. Use tag altitude if available
   float timeout_s = 0;
-  const float reel_rate_cms = 38.1; //~1.25ft/s
+  const float reel_rate_cms = std::fmaxf(1,ht_tether_spd); //~1.25ft/s
   if(!is_equal(_tether_status.high_tension_tag_alt_cm,0.0f)) {
     timeout_s = _tether_status.high_tension_tag_alt_cm / reel_rate_cms;
   } else {

@@ -84,7 +84,7 @@ public:
   bool is_tether_high_tension() { return _tether_status.high_tension; };
 
   //Determine if the tether tensioner may have failed
-  bool check_for_high_tension_timeout();
+  bool check_for_high_tension_timeout(float ht_tether_spd);
 
   //Override any commands from ACE with zero-velocity commands
   void override_with_zero_vel_cmd();

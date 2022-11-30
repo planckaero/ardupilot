@@ -226,6 +226,7 @@ public:
         k_param_planck_land_kp_z, // 127
         k_param_planck_high_tension_throttle, // 128
         k_param_nav_lights_on, // 129
+        k_param_planck_expected_tether_speed_cms, // 130
 
         //
         // 135 : reserved for Solo until features merged with master
@@ -473,6 +474,7 @@ public:
     // planck Parameters
     AP_Float                planck_land_kp_z;
     AP_Float                planck_high_tension_throttle;
+    AP_Float                planck_expected_tether_speed_cms;
     AP_Int8                 nav_lights_on;
 
     // Note: keep initializers here in the same order as they are declared
